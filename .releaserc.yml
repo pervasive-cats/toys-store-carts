@@ -1,0 +1,81 @@
+branches:
+  - main
+  - { name: beta, prerelease: true, channel: beta }
+plugins:
+  - - '@semantic-release/commit-analyzer'
+    - preset: conventionalcommits
+  - '@semantic-release/release-notes-generator'
+  - '@semantic-release/changelog'
+  - - '@google/semantic-release-replace-plugin'
+    - replacements:
+        - files:
+            - build.sbt
+          from: version := .*
+          to: version := "${nextRelease.version}",
+          results:
+            - file: build.sbt
+              hasChanged: true
+              numMatches: 1
+              numReplacements: 1
+          countMatches: true
+        - files:
+            - package.json
+          from: '\"version\": \".*\"'
+          to: '"version": "${nextRelease.version}"'
+          results:
+            - file: package.json
+              hasChanged: true
+              numMatches: 1
+              numReplacements: 1
+          countMatches: true
+        - files:
+            - package-lock.json
+          from: '\"name\": \"toys-store-bc-template\",\n  \"version\": \".*\"'
+          to: "\"name\": \"toys-store-bc-template\",\n  \"version\": \"${nextRelease.version}\""
+          results:
+            - file: package-lock.json
+              hasChanged: true
+              numMatches: 1
+              numReplacements: 1
+          countMatches: true
+        - files:
+            - package-lock.json
+          from: '\"name\": \"toys-store-bc-template\",\n      \"version\": \".*\"'
+          to: "\"name\": \"toys-store-bc-template\",\n      \"version\": \"${nextRelease.version}\""
+          results:
+            - file: package-lock.json
+              hasChanged: true
+              numMatches: 1
+              numReplacements: 1
+          countMatches: true
+        - files:
+            - sonar-project.properties
+          from: sonar.projectVersion=.*
+          to: sonar.projectVersion=${nextRelease.version}
+          results:
+            - file: sonar-project.properties
+              hasChanged: true
+              numMatches: 1
+              numReplacements: 1
+          countMatches: true
+  - - '@semantic-release/exec'
+    - publishCmd: |
+        sbt assembly;
+        if [[ "${nextRelease.channel}" == "beta" ]]; then
+          echo "release=0" >> $GITHUB_OUTPUT;
+        else
+          echo "release=1" >> $GITHUB_OUTPUT;
+        fi
+      shell: /bin/bash
+  - - '@semantic-release/git'
+    - assets:
+        - build.sbt
+        - README.md
+        - CHANGELOG.md
+        - package.json
+        - package-lock.json
+        - sonar-project.properties
+  - - '@semantic-release/github'
+    - assets:
+        - path: target/scala-3.2.1/main.jar
+          label: Main JAR file

@@ -1,0 +1,59 @@
+name: Test
+
+on:
+  push:
+    branches-ignore:
+      - main
+      - beta
+      - renovate/configure
+    paths-ignore:
+      - CHANGELOG.md
+      - README.md
+      - CONTRIBUTING.md
+      - renovate.json
+      - ".github/workflows/**"
+      - .releaserc.yml
+      - "package*.json"
+  workflow_call:
+
+jobs:
+  test:
+    name: Build and test
+    runs-on: ubuntu-20.04
+    env:
+      TERM: dumb
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup scala environment
+        uses: olafurpg/setup-scala@v13
+        with:
+          java-version: openjdk@1.17
+      - name: Cache sbt
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.sbt
+            ~/.coursier
+          key: ${{ runner.os }}-sbt-${{ hashfiles('**/build.sbt') }}
+      - name: Lint with scalafmt
+        run: sbt scalafmtCheckAll
+      - name: Check with scalafix
+        run: sbt 'scalafixAll --check'
+      - name: Test
+        run: sbt clean test coverageReport
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          directory: target/scala-3.2.2-RC1/scoverage-report
+          fail_ci_if_error: true
+          flags: unittests
+          name: codecov-umbrella
+          verbose: true
+      - name: Upload coverage to GitHub
+        uses: actions/upload-artifact@v3.1.2
+        with:
+          name: coverage
+          path: target/scala-3.2.2-RC1/scoverage-report/scoverage.xml
+          if-no-files-found: error

@@ -1,0 +1,27 @@
+{
+  "name": "toys-store-bc-template",
+  "version": "0.0.0",
+  "description": "",
+  "main": "",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pervasive-cats/toys-store-bc-template.git"
+  },
+  "author": "",
+  "license": "",
+  "bugs": {
+    "url": "https://github.com/pervasive-cats/toys-store-bc-template/issues"
+  },
+  "homepage": "https://github.com/pervasive-cats/toys-store-bc-template#readme",
+  "dependencies": {
+    "@google/semantic-release-replace-plugin": "1.2.0",
+    "@semantic-release/changelog": "6.0.2",
+    "@semantic-release/exec": "6.0.3",
+    "@semantic-release/git": "10.0.1",
+    "conventional-changelog-conventionalcommits": "5.0.0",
+    "semantic-release": "20.0.2"
+  }
+}
