@@ -4,7 +4,7 @@ Global / onChangedBuildSource := ReloadOnSourceChanges
 
 Global / excludeLintKeys := Set(idePackagePrefix)
 
-ThisBuild / scalaVersion := "3.2.2-RC1"
+ThisBuild / scalaVersion := "3.2.2-RC2"
 
 ThisBuild / scalafixDependencies ++= Seq(
   "com.github.liancheng" %% "organize-imports" % "0.6.0",
@@ -18,7 +18,7 @@ lazy val root = project
   .in(file("."))
   .enablePlugins(AutomateHeaderPlugin)
   .settings(
-    name := "toys-store-bc-template",
+    name := "toys-store-carts",
     scalacOptions ++= Seq(
       "-deprecation",
       "-Xfatal-warnings"
