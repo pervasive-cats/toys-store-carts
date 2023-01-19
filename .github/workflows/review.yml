@@ -24,11 +24,11 @@ jobs:
         uses: actions/download-artifact@v3.0.2
         with:
           name: coverage
-          path: target/scala-3.2.2-RC1/scoverage-report
+          path: target/scala-3.2.2-RC2/scoverage-report
       - name: SonarCloud scan fixed
         uses: pervasive-cats/sonarcloud-scoverage-fix@v1.0.0
         with:
-          scoverageReport: target/scala-3.2.2-RC1/scoverage-report/scoverage.xml
+          scoverageReport: target/scala-3.2.2-RC2/scoverage-report/scoverage.xml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
