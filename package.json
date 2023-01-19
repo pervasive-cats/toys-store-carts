@@ -1,5 +1,5 @@
 {
-  "name": "toys-store-bc-template",
+  "name": "toys-store-carts",
   "version": "0.0.0",
   "description": "",
   "main": "",
@@ -8,14 +8,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/pervasive-cats/toys-store-bc-template.git"
+    "url": "git+https://github.com/pervasive-cats/toys-store-carts.git"
   },
   "author": "",
   "license": "",
   "bugs": {
-    "url": "https://github.com/pervasive-cats/toys-store-bc-template/issues"
+    "url": "https://github.com/pervasive-cats/toys-store-carts/issues"
   },
-  "homepage": "https://github.com/pervasive-cats/toys-store-bc-template#readme",
+  "homepage": "https://github.com/pervasive-cats/toys-store-carts#readme",
   "dependencies": {
     "@google/semantic-release-replace-plugin": "1.2.0",
     "@semantic-release/changelog": "6.0.2",

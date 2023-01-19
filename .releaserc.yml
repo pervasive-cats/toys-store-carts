@@ -30,8 +30,8 @@ plugins:
           countMatches: true
         - files:
             - package-lock.json
-          from: '\"name\": \"toys-store-bc-template\",\n  \"version\": \".*\"'
-          to: "\"name\": \"toys-store-bc-template\",\n  \"version\": \"${nextRelease.version}\""
+          from: '\"name\": \"toys-store-carts\",\n  \"version\": \".*\"'
+          to: "\"name\": \"toys-store-carts\",\n  \"version\": \"${nextRelease.version}\""
           results:
             - file: package-lock.json
               hasChanged: true
@@ -40,8 +40,8 @@ plugins:
           countMatches: true
         - files:
             - package-lock.json
-          from: '\"name\": \"toys-store-bc-template\",\n      \"version\": \".*\"'
-          to: "\"name\": \"toys-store-bc-template\",\n      \"version\": \"${nextRelease.version}\""
+          from: '\"name\": \"toys-store-carts\",\n      \"version\": \".*\"'
+          to: "\"name\": \"toys-store-carts\",\n      \"version\": \"${nextRelease.version}\""
           results:
             - file: package-lock.json
               hasChanged: true
