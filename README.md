@@ -1,18 +1,18 @@
-# toys-store-bc-template
+# toys-store-carts
 
-[![Build status](https://github.com/pervasive-cats/toys-store-bc-template/actions/workflows/release.yml/badge.svg)](https://github.com/pervasive-cats/toys-store-bc-template/actions/workflows/release.yml)
+[![Build status](https://github.com/pervasive-cats/toys-store-carts/actions/workflows/release.yml/badge.svg)](https://github.com/pervasive-cats/toys-store-carts/actions/workflows/release.yml)
 [![semantic-release: conventional-commits](https://img.shields.io/badge/semantic--release-conventional_commits-e10098?logo=semantic-release)](https://github.com/semantic-release/semantic-release)
-[![Latest release](https://img.shields.io/github/v/release/pervasive-cats/toys-store-bc-template)](https://github.com/pervasive-cats/toys-store-bc-template/releases/latest/)
-[![Scaladoc](https://img.shields.io/github/v/release/pervasive-cats/toys-store-bc-template?label=scaladoc)](https://pervasive-cats.github.io/toys-store-bc-template/io/github/pervasivecats)
-[![Issues](https://img.shields.io/github/issues/pervasive-cats/toys-store-bc-template)](https://github.com/pervasive-cats/toys-store-bc-template/issues)
-[![Pull requests](https://img.shields.io/github/issues-pr/pervasive-cats/toys-store-bc-template)](https://github.com/pervasive-cats/toys-store-bc-template/pulls)
-[![Codecov](https://codecov.io/gh/pervasive-cats/toys-store-bc-template/branch/main/graph/badge.svg?token=UX36N6CU78)](https://codecov.io/gh/pervasive-cats/toys-store-bc-template)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=pervasive-cats_toys-store-bc-template&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=pervasive-cats_toys-store-bc-template)
-[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=pervasive-cats_toys-store-bc-template&metric=bugs)](https://sonarcloud.io/summary/new_code?id=pervasive-cats_toys-store-bc-template)
-[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=pervasive-cats_toys-store-bc-template&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=pervasive-cats_toys-store-bc-template)
-[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=pervasive-cats_toys-store-bc-template&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=pervasive-cats_toys-store-bc-template)
-[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=pervasive-cats_toys-store-bc-template&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=pervasive-cats_toys-store-bc-template)
-[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=pervasive-cats_toys-store-bc-template&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=pervasive-cats_toys-store-bc-template)
+[![Latest release](https://img.shields.io/github/v/release/pervasive-cats/toys-store-carts)](https://github.com/pervasive-cats/toys-store-carts/releases/latest/)
+[![Scaladoc](https://img.shields.io/github/v/release/pervasive-cats/toys-store-carts?label=scaladoc)](https://pervasive-cats.github.io/toys-store-carts/io/github/pervasivecats)
+[![Issues](https://img.shields.io/github/issues/pervasive-cats/toys-store-carts)](https://github.com/pervasive-cats/toys-store-carts/issues)
+[![Pull requests](https://img.shields.io/github/issues-pr/pervasive-cats/toys-store-carts)](https://github.com/pervasive-cats/toys-store-carts/pulls)
+[![Codecov](https://codecov.io/gh/pervasive-cats/toys-store-carts/branch/main/graph/badge.svg?token=UX36N6CU78)](https://codecov.io/gh/pervasive-cats/toys-store-carts)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=pervasive-cats_toys-store-carts&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=pervasive-cats_toys-store-carts)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=pervasive-cats_toys-store-carts&metric=bugs)](https://sonarcloud.io/summary/new_code?id=pervasive-cats_toys-store-carts)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=pervasive-cats_toys-store-carts&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=pervasive-cats_toys-store-carts)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=pervasive-cats_toys-store-carts&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=pervasive-cats_toys-store-carts)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=pervasive-cats_toys-store-carts&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=pervasive-cats_toys-store-carts)
+[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=pervasive-cats_toys-store-carts&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=pervasive-cats_toys-store-carts)
 
 ### Copyright statement
 
