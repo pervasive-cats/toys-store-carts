@@ -12,6 +12,6 @@ import carts.cart.valueobjects.{CartId, Store}
 trait CartMoved {
 
   val cartId: CartId
-  val store: Store
 
+  val store: Store
 }

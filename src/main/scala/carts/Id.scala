@@ -5,14 +5,9 @@
  */
 
 package io.github.pervasivecats
-package carts.cart.valueobjects
+package carts
 
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.NonNegative
 
-import carts.IdLong
-
-trait Store {
-
-  val value: IdLong
-}
+type IdLong = Long Refined NonNegative

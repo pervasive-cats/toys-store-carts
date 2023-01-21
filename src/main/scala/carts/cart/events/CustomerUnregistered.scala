@@ -12,5 +12,4 @@ import carts.cart.valueobjects.Customer
 trait CustomerUnregistered {
 
   val customer: Customer
-
 }

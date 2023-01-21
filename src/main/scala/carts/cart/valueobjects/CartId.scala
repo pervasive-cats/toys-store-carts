@@ -10,10 +10,9 @@ package carts.cart.valueobjects
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.NonNegative
 
-import carts.id
+import carts.IdLong
 
 trait CartId {
 
-  val value: id
-
+  val value: IdLong
 }

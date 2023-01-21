@@ -14,5 +14,4 @@ trait LockedCart extends Cart {
   def unlock: UnlockedCart
 
   def associateTo(customer: Customer): AssociatedCart
-
 }

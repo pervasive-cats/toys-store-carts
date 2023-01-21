@@ -14,5 +14,4 @@ trait AssociatedCart extends Cart {
   val customer: Customer
 
   def lock: LockedCart
-
 }

@@ -10,6 +10,6 @@ package carts.cart.valueobjects.item
 trait Item {
 
   val catalogItem: CatalogItem
-  val itemId: ItemId
 
+  val itemId: ItemId
 }
