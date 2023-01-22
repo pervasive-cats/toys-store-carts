@@ -13,26 +13,26 @@ import eu.timepit.refined.string.MatchesRegex
 
 import carts.{Validated, ValidationError}
 
-type EmailString = String Refined
+type Email = String Refined
   MatchesRegex[
     "[a-z0-9!#$%&'*+/=?^_`{|}~\\-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~\\-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?"
   ]
 
 trait Customer {
 
-  val value: EmailString
+  val value: Email
 }
 
 object Customer {
 
-  private case class CustomerImpl(value: EmailString) extends Customer
+  private case class CustomerImpl(value: Email) extends Customer
 
   case object WrongCustomerFormat extends ValidationError {
 
     override val message: String = "The email format is invalid"
   }
 
-  def apply(value: String): Validated[Customer] = applyRef[EmailString](value) match {
+  def apply(value: String): Validated[Customer] = applyRef[Email](value) match {
     case Left(_) => Left[ValidationError, Customer](WrongCustomerFormat)
     case Right(value) => Right[ValidationError, Customer](CustomerImpl(value))
   }
