@@ -9,6 +9,4 @@ package carts.cart.entities
 
 import carts.cart.valueobjects.Customer
 
-trait AssociatedCart extends Cart {
-  
-}
+trait AssociatedCart extends Cart {}
