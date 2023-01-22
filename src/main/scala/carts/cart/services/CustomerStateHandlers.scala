@@ -7,7 +7,7 @@
 package io.github.pervasivecats
 package carts.cart.services
 
-import carts.cart.events.CustomerUnregistered
+import carts.cart.domainevents.CustomerUnregistered
 
 trait CustomerStateHandlers {
 

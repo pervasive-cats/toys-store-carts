@@ -7,7 +7,7 @@
 package io.github.pervasivecats
 package carts.cart.services
 
-import carts.cart.events.{CartMoved, ItemInsertedIntoCart}
+import carts.cart.domainevents.{CartMoved, ItemInsertedIntoCart}
 
 trait CartMovementHandlers {
 

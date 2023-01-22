@@ -5,7 +5,7 @@
  */
 
 package io.github.pervasivecats
-package carts.cart.events
+package carts.cart.domainevents
 
 import carts.cart.valueobjects.Customer
 

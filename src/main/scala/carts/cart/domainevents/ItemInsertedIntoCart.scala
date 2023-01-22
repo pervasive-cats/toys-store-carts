@@ -5,7 +5,7 @@
  */
 
 package io.github.pervasivecats
-package carts.cart.events
+package carts.cart.domainevents
 
 import io.github.pervasivecats.carts.cart.valueobjects.item.CatalogItem
 import io.github.pervasivecats.carts.cart.valueobjects.item.ItemId
