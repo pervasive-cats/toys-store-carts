@@ -7,10 +7,9 @@
 package io.github.pervasivecats
 package carts.cart.services
 
-import carts.cart.domainevents.{CartMoved, ItemInsertedIntoCart}
+import carts.cart.domainevents.CartMoved
 
 trait CartMovementHandlers {
 
   def onCartMoved(event: CartMoved): Unit
-
 }

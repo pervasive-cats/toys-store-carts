@@ -12,5 +12,4 @@ import carts.cart.domainevents.CustomerUnregistered
 trait CustomerStateHandlers {
 
   def onCustomerUnregistered(event: CustomerUnregistered): Unit
-
 }
