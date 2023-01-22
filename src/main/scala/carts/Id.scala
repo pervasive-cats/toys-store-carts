@@ -10,4 +10,4 @@ package carts
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.numeric.NonNegative
 
-type IdLong = Long Refined NonNegative
+type Id = Long Refined NonNegative
