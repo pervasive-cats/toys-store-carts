@@ -9,9 +9,7 @@ package carts.cart.entities
 
 import carts.cart.valueobjects.Customer
 
-trait AssociatedCartOps {
-
-  val customer: Customer
-
+trait AssociatedCartOps[A <: AssociatedCart] {
+  
   def lock: LockedCart
 }
