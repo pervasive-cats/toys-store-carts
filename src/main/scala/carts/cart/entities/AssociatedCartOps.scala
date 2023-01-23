@@ -10,6 +10,6 @@ package carts.cart.entities
 import carts.cart.valueobjects.Customer
 
 trait AssociatedCartOps[A <: AssociatedCart] {
-  
+
   def lock: LockedCart
 }
