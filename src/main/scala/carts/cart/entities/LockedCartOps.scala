@@ -11,7 +11,17 @@ import carts.cart.valueobjects.Customer
 
 trait LockedCartOps[A <: LockedCart] {
 
-  def unlock: UnlockedCart
+  def unlock(lockedCart: A): UnlockedCart
 
-  def associateTo(customer: Customer): AssociatedCart
+  def associateTo(lockedCart: A, customer: Customer): AssociatedCart
+}
+
+object LockedCartOps {
+
+  extension [A <: LockedCart: LockedCartOps](lockedCart: A) {
+
+    def unlock: UnlockedCart = implicitly[LockedCartOps[A]].unlock(lockedCart)
+
+    def associateTo(customer: Customer): AssociatedCart = implicitly[LockedCartOps[A]].associateTo(lockedCart, customer)
+  }
 }

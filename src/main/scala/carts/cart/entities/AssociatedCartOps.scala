@@ -11,5 +11,13 @@ import carts.cart.valueobjects.Customer
 
 trait AssociatedCartOps[A <: AssociatedCart] {
 
-  def lock: LockedCart
+  def lock(associatedCart: AssociatedCart): LockedCart
+}
+
+object AssociatedCartOps {
+
+  extension [A <: AssociatedCart: AssociatedCartOps](associatedCart: A) {
+
+    def lock: LockedCart = implicitly[AssociatedCartOps[A]].lock(associatedCart)
+  }
 }

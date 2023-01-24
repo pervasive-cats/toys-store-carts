@@ -14,8 +14,8 @@ import org.scalatest.matchers.should.Matchers.*
 class ItemTest extends AnyFunSpec {
 
   describe("An item") {
-    describe("when created with valid catalog item and item identifiers") {
-      it("should be created correctly") {
+    describe("when created with a catalog item and an item identifiers") {
+      it("should contain them") {
         val catalogItemId: Long = 9000
         val itemIdValue: Long = 4
 
