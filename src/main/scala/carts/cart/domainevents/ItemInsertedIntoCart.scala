@@ -22,3 +22,12 @@ trait ItemInsertedIntoCart {
 
   val itemId: ItemId
 }
+
+object ItemInsertedIntoCart {
+
+  private case class ItemInsertedIntoCartImpl(cartId: CartId, store: Store, catalogItem: CatalogItem, itemId: ItemId)
+    extends ItemInsertedIntoCart
+
+  def apply(cartId: CartId, store: Store, catalogItem: CatalogItem, itemId: ItemId): ItemInsertedIntoCart =
+    ItemInsertedIntoCartImpl(cartId, store, catalogItem, itemId)
+}

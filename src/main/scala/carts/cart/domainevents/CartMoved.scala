@@ -15,3 +15,10 @@ trait CartMoved {
 
   val store: Store
 }
+
+object CartMoved {
+
+  private case class CartMovedImpl(cartId: CartId, store: Store) extends CartMoved
+
+  def apply(cartId: CartId, store: Store): CartMoved = CartMovedImpl(cartId, store)
+}

@@ -24,5 +24,4 @@ object UnlockedCart {
   }
 
   def apply(cartId: CartId, store: Store): UnlockedCart = UnlockedCartImpl(cartId, store, movable = true)
-
 }

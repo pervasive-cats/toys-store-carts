@@ -13,3 +13,10 @@ trait CustomerUnregistered {
 
   val customer: Customer
 }
+
+object CustomerUnregistered {
+
+  private case class CustomerUnregisteredImpl(customer: Customer) extends CustomerUnregistered
+
+  def apply(customer: Customer): CustomerUnregistered = CustomerUnregisteredImpl(customer)
+}
