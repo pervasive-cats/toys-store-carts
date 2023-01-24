@@ -28,7 +28,11 @@ lazy val root = project
     libraryDependencies ++= Seq(
       scalactic,
       scalatest,
-      refined
+      refined,
+      postgresql,
+      quill,
+      testContainers,
+      testContainersPostgresql
     ),
     wartremoverErrors ++= Warts.allBut(Wart.ImplicitParameter),
     version := "0.0.0",
