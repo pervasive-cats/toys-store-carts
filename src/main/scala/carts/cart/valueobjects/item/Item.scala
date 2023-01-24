@@ -13,3 +13,10 @@ trait Item {
 
   val itemId: ItemId
 }
+
+object Item {
+
+  private case class ItemImpl(catalogItem: CatalogItem, itemId: ItemId) extends Item
+
+  def apply(catalogItem: CatalogItem, itemId: ItemId): Item = ItemImpl(catalogItem, itemId)
+}

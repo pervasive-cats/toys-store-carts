@@ -8,8 +8,6 @@ package io.github.pervasivecats
 package carts.cart.valueobjects
 
 import eu.timepit.refined.api.RefType.applyRef
-import eu.timepit.refined.api.Refined
-import eu.timepit.refined.numeric.NonNegative
 
 import carts.{Id, Validated, ValidationError}
 

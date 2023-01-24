@@ -7,12 +7,26 @@
 package io.github.pervasivecats
 package carts.cart.valueobjects.item
 
-import eu.timepit.refined.api.Refined
-import eu.timepit.refined.numeric.NonNegative
+import eu.timepit.refined.api.RefType.applyRef
 
-import carts.Id
+import carts.{Id, Validated, ValidationError}
 
 trait CatalogItem {
 
   val value: Id
+}
+
+object CatalogItem {
+
+  private case class CatalogItemImpl(value: Id) extends CatalogItem
+
+  case object WrongCatalogItemFormat extends ValidationError {
+
+    override val message: String = "The catalog item format is invalid"
+  }
+
+  def apply(value: Long): Validated[CatalogItem] = applyRef[Id](value) match {
+    case Left(_) => Left[ValidationError, CatalogItem](WrongCatalogItemFormat)
+    case Right(value) => Right[ValidationError, CatalogItem](CatalogItemImpl(value))
+  }
 }
