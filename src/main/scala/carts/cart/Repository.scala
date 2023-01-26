@@ -51,7 +51,6 @@ object Repository {
     override val message: String = "The queried cart was not found"
   }
 
-  @SuppressWarnings(Array("scalafix:DisableSyntax.magicBooleans"))
   private class PostgresRepository(ctx: PostgresJdbcContext[SnakeCase]) extends Repository {
 
     import ctx.*
