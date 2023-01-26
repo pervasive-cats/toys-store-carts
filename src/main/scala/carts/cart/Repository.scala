@@ -28,7 +28,7 @@ trait Repository {
 
   def add(cart: Cart): Validated[Unit]
 
-  // def update(cart: Cart): Validated[Unit]
+  def update(cart: Cart): Validated[Unit]
 
   def remove(cart: Cart): Validated[Unit]
 
@@ -74,7 +74,6 @@ object Repository {
       ctx
         .run(queryById(cartId, store))
         .map(c => {
-          println(c.customer)
           c.customer match {
             case Some(email) => for customer <- Customer(email) yield AssociatedCart(cartId, store, customer)
             case None =>
@@ -114,6 +113,40 @@ object Repository {
           Left[ValidationError, Unit](OperationFailed)
         else
           Right[ValidationError, Unit](())
+      }
+    }
+
+    def update(cart: Cart): Validated[Unit] = protectFromException {
+      cart match {
+        case cart: AssociatedCart =>
+          if (
+            ctx.run(
+              queryById(cart.cartId, cart.store).update(
+                _.cartId -> lift[Long](cart.cartId.value),
+                _.store -> lift[Long](cart.store.value),
+                _.isMovable -> lift[Boolean](cart.isMovable),
+                _.customer -> Some(lift[String](cart.customer.value))
+              )
+            ) !== 1L
+          )
+            Left[ValidationError, Unit](OperationFailed)
+          else
+            Right[ValidationError, Unit](())
+        case _ =>
+          if (
+            ctx.run(
+              queryById(cart.cartId, cart.store)
+                .update(
+                  _.cartId -> lift[Long](cart.cartId.value),
+                  _.store -> lift[Long](cart.store.value),
+                  _.isMovable -> lift[Boolean](cart.isMovable),
+                  _.customer -> None
+                )
+            ) !== 1L
+          )
+            Left[ValidationError, Unit](OperationFailed)
+          else
+            Right[ValidationError, Unit](())
       }
     }
 
