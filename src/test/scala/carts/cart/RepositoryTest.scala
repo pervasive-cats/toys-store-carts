@@ -78,21 +78,33 @@ class RepositoryTest extends AnyFunSpec with TestContainerForAll {
       }
     }
 
-    describe("if never added to the database") {
-      it("should not be present") {
-        val db: Repository = repository.getOrElse(fail())
-        db.findById(cartId, store).left.value shouldBe CartNotFound
-        db.remove(LockedCart(cartId, store)).left.value shouldBe OperationFailed
-      }
-    }
-
-    describe("if already registered") {
+    describe("if already present in the database") {
       it("should not allow a new registration") {
         val db: Repository = repository.getOrElse(fail())
         val lockedCart: Cart = LockedCart(cartId, store)
         db.add(lockedCart).getOrElse(fail())
         db.add(lockedCart).left.value shouldBe CartAlreadyPresent
         db.remove(lockedCart).getOrElse(fail())
+      }
+    }
+
+    describe("if added with the same cart identifier as another cart, but different store") {
+      it("should be added to the database") {
+        val db: Repository = repository.getOrElse(fail())
+        val c0 = LockedCart(CartId(0).getOrElse(fail()), Store(0).getOrElse(fail()))
+        val c1 = LockedCart(CartId(0).getOrElse(fail()), Store(1).getOrElse(fail()))
+        db.add(c0).getOrElse(fail())
+        db.add(c1).getOrElse(fail())
+        db.remove(c0).getOrElse(fail())
+        db.remove(c1).getOrElse(fail())
+      }
+    }
+
+    describe("if never added to the database") {
+      it("should not be present") {
+        val db: Repository = repository.getOrElse(fail())
+        db.findById(cartId, store).left.value shouldBe CartNotFound
+        db.remove(LockedCart(cartId, store)).left.value shouldBe OperationFailed
       }
     }
 
@@ -134,6 +146,32 @@ class RepositoryTest extends AnyFunSpec with TestContainerForAll {
         db.remove(LockedCart(cartId, store)).getOrElse(fail())
       }
     }
-  }
 
+    describe("when queried to retrieve all carts registered with a store") {
+      it("should return all the requested carts") {
+        val db: Repository = repository.getOrElse(fail())
+        val cartNotInStore: LockedCart = LockedCart(CartId(0).getOrElse(fail()), Store(0).getOrElse(fail()))
+        val lockedCart: LockedCart = LockedCart(CartId(0).getOrElse(fail()), store)
+        val unlockedCartId: Long = 1
+        val unlockedCart: UnlockedCart = UnlockedCart(CartId(unlockedCartId).getOrElse(fail()), store)
+        val associatedCartId: Long = 2
+        val associatedCart: AssociatedCart = AssociatedCart(CartId(associatedCartId).getOrElse(fail()), store, customer)
+
+        db.add(cartNotInStore).getOrElse(fail())
+        db.add(lockedCart).getOrElse(fail())
+        db.add(LockedCart(CartId(unlockedCartId).getOrElse(fail()), store)).getOrElse(fail())
+        db.update(unlockedCart).getOrElse(fail())
+        db.add(LockedCart(CartId(associatedCartId).getOrElse(fail()), store)).getOrElse(fail())
+        db.update(associatedCart).getOrElse(fail())
+
+        db.findByStore(store).getOrElse(fail()).contains(cartNotInStore) shouldBe false
+        db.findByStore(store).getOrElse(fail()) shouldBe Set(lockedCart, unlockedCart, associatedCart)
+
+        db.remove(cartNotInStore).getOrElse(fail())
+        db.remove(lockedCart).getOrElse(fail())
+        db.remove(unlockedCart).getOrElse(fail())
+        db.remove(associatedCart).getOrElse(fail())
+      }
+    }
+  }
 }
