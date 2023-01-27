@@ -104,6 +104,13 @@ class RepositoryTest extends AnyFunSpec with TestContainerForAll {
       it("should not be present") {
         val db: Repository = repository.getOrElse(fail())
         db.findById(cartId, store).left.value shouldBe CartNotFound
+      }
+      it("should not be updatable") {
+        val db: Repository = repository.getOrElse(fail())
+        db.update(LockedCart(cartId, store)).left.value shouldBe OperationFailed
+      }
+      it("should not be removable") {
+        val db: Repository = repository.getOrElse(fail())
         db.remove(LockedCart(cartId, store)).left.value shouldBe OperationFailed
       }
     }
