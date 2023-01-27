@@ -13,7 +13,7 @@ trait UnlockedCart extends Cart
 
 object UnlockedCart {
 
-  private case class UnlockedCartImpl(cartId: CartId, store: Store, isMovable: Boolean) extends UnlockedCart
+  private case class UnlockedCartImpl(cartId: CartId, store: Store, movable: Boolean) extends UnlockedCart
 
   given UnlockedCartOps[UnlockedCart] with {
 
@@ -23,5 +23,5 @@ object UnlockedCart {
       AssociatedCart(unlockedCart.cartId, unlockedCart.store, customer)
   }
 
-  def apply(cartId: CartId, store: Store): UnlockedCart = UnlockedCartImpl(cartId, store, isMovable = true)
+  def apply(cartId: CartId, store: Store): UnlockedCart = UnlockedCartImpl(cartId, store, movable = true)
 }

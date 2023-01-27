@@ -26,7 +26,7 @@ class AssociatedCartTest extends AnyFunSpec {
       it("should contain them") {
         associatedCart.cartId shouldBe cartId
         associatedCart.store shouldBe store
-        associatedCart.isMovable shouldBe true
+        associatedCart.movable shouldBe true
         associatedCart.customer shouldBe customer
       }
     }
@@ -37,7 +37,7 @@ class AssociatedCartTest extends AnyFunSpec {
 
         lockedCart.cartId shouldBe cartId
         lockedCart.store shouldBe store
-        lockedCart.isMovable shouldBe false
+        lockedCart.movable shouldBe false
       }
     }
   }

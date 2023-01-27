@@ -16,13 +16,13 @@ import carts.cart.valueobjects.item.ItemId.WrongItemIdFormat
 class ItemIdTest extends AnyFunSpec {
 
   describe("An item id") {
-    describe("when created with a negative value identifier") {
+    describe("when created with a negative value") {
       it("should not be valid") {
         ItemId(-9000).left.value shouldBe WrongItemIdFormat
       }
     }
 
-    describe("when created with a positive value identifier") {
+    describe("when created with a positive value") {
       it("should be valid") {
         val id: Long = 9000
 
@@ -30,7 +30,7 @@ class ItemIdTest extends AnyFunSpec {
       }
     }
 
-    describe("when created with an identifier of value 0") {
+    describe("when created with a value of 0") {
       it("should be valid") {
         val id: Long = 0
 

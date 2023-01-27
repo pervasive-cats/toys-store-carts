@@ -59,11 +59,11 @@ class RepositoryTest extends AnyFunSpec with TestContainerForAll {
     describe("after being added to the database") {
       it("should be present in the database") {
         val db: Repository = repository.getOrElse(fail())
-        db.add(LockedCart(cartId, store))
+        db.add(LockedCart(cartId, store)).getOrElse(fail())
         val cart: Cart = db.findById(cartId, store).getOrElse(fail())
         cart.cartId shouldBe cartId
         cart.store shouldBe store
-        cart.isMovable shouldBe false
+        cart.movable shouldBe false
         db.remove(cart).getOrElse(fail())
       }
     }
@@ -91,12 +91,12 @@ class RepositoryTest extends AnyFunSpec with TestContainerForAll {
     describe("if added with the same cart identifier as another cart, but different store") {
       it("should be added to the database") {
         val db: Repository = repository.getOrElse(fail())
-        val c0 = LockedCart(CartId(0).getOrElse(fail()), Store(0).getOrElse(fail()))
-        val c1 = LockedCart(CartId(0).getOrElse(fail()), Store(1).getOrElse(fail()))
-        db.add(c0).getOrElse(fail())
-        db.add(c1).getOrElse(fail())
-        db.remove(c0).getOrElse(fail())
-        db.remove(c1).getOrElse(fail())
+        val firstCart = LockedCart(CartId(0).getOrElse(fail()), Store(0).getOrElse(fail()))
+        val secondCart = LockedCart(CartId(0).getOrElse(fail()), Store(1).getOrElse(fail()))
+        db.add(firstCart).getOrElse(fail())
+        db.add(secondCart).getOrElse(fail())
+        db.remove(firstCart).getOrElse(fail())
+        db.remove(secondCart).getOrElse(fail())
       }
     }
 
@@ -112,9 +112,9 @@ class RepositoryTest extends AnyFunSpec with TestContainerForAll {
       it("should show as unlocked in the database") {
         val db: Repository = repository.getOrElse(fail())
         db.add(LockedCart(cartId, store)).getOrElse(fail())
-        db.findById(cartId, store).getOrElse(fail()).isMovable shouldBe false
+        db.findById(cartId, store).getOrElse(fail()).movable shouldBe false
         db.update(UnlockedCart(cartId, store)).getOrElse(fail())
-        db.findById(cartId, store).getOrElse(fail()).isMovable shouldBe true
+        db.findById(cartId, store).getOrElse(fail()).movable shouldBe true
         db.remove(UnlockedCart(cartId, store)).getOrElse(fail())
       }
     }
@@ -123,12 +123,12 @@ class RepositoryTest extends AnyFunSpec with TestContainerForAll {
       it("should show the associated customer in the database") {
         val db: Repository = repository.getOrElse(fail())
         db.add(LockedCart(cartId, store)).getOrElse(fail())
-        db.findById(cartId, store).getOrElse(fail()).isMovable shouldBe false
+        db.findById(cartId, store).getOrElse(fail()).movable shouldBe false
         db.update(AssociatedCart(cartId, store, customer)).getOrElse(fail())
         val cart: Cart = db.findById(cartId, store).getOrElse(fail())
         cart match {
           case cart: AssociatedCart =>
-            cart.isMovable shouldBe true
+            cart.movable shouldBe true
             cart.customer shouldBe customer
           case _ => fail()
         }
@@ -142,7 +142,7 @@ class RepositoryTest extends AnyFunSpec with TestContainerForAll {
         db.add(LockedCart(cartId, store)).getOrElse(fail())
         db.update(AssociatedCart(cartId, store, customer)).getOrElse(fail())
         db.update(LockedCart(cartId, store)).getOrElse(fail())
-        db.findById(cartId, store).getOrElse(fail()).isMovable shouldBe false
+        db.findById(cartId, store).getOrElse(fail()).movable shouldBe false
         db.remove(LockedCart(cartId, store)).getOrElse(fail())
       }
     }

@@ -16,7 +16,7 @@ trait AssociatedCart extends Cart {
 
 object AssociatedCart {
 
-  private case class AssociatedCartImpl(cartId: CartId, store: Store, isMovable: Boolean, customer: Customer)
+  private case class AssociatedCartImpl(cartId: CartId, store: Store, movable: Boolean, customer: Customer)
     extends AssociatedCart
 
   given AssociatedCartOps[AssociatedCart] with {
@@ -25,5 +25,5 @@ object AssociatedCart {
   }
 
   def apply(cartId: CartId, store: Store, customer: Customer): AssociatedCart =
-    AssociatedCartImpl(cartId: CartId, store: Store, isMovable = true, customer: Customer)
+    AssociatedCartImpl(cartId: CartId, store: Store, movable = true, customer: Customer)
 }

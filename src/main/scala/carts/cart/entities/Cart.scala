@@ -15,5 +15,5 @@ trait Cart {
 
   val store: Store
 
-  val isMovable: Boolean
+  val movable: Boolean
 }
