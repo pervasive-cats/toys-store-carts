@@ -129,7 +129,6 @@ object Repository {
         case cart: AssociatedCart =>
           ctx.run(
             queryById(cart.cartId, cart.store).update(
-              _.cartId -> lift[Long](cart.cartId.value),
               _.store -> lift[Long](cart.store.value),
               _.movable -> lift[Boolean](cart.movable),
               _.customer -> Some(lift[String](cart.customer.value))
@@ -139,7 +138,6 @@ object Repository {
           ctx.run(
             queryById(cart.cartId, cart.store)
               .update(
-                _.cartId -> lift[Long](cart.cartId.value),
                 _.store -> lift[Long](cart.store.value),
                 _.movable -> lift[Boolean](cart.movable),
                 _.customer -> None
