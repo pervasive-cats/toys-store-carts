@@ -16,8 +16,7 @@ trait AssociatedCart extends Cart {
 
 object AssociatedCart {
 
-  private case class AssociatedCartImpl(cartId: CartId, store: Store, movable: Boolean, customer: Customer)
-    extends AssociatedCart
+  private case class AssociatedCartImpl(cartId: CartId, store: Store, movable: Boolean, customer: Customer) extends AssociatedCart
 
   given AssociatedCartOps[AssociatedCart] with {
 

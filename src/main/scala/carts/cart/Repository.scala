@@ -8,10 +8,12 @@ package io.github.pervasivecats
 package carts.cart
 
 import scala.util.Try
+
 import com.typesafe.config.Config
 import eu.timepit.refined.auto.autoUnwrap
 import eu.timepit.refined.auto.given
 import io.getquill.*
+
 import carts.cart.valueobjects.{CartId, Customer, Store}
 import carts.cart.valueobjects.Customer.WrongCustomerFormat
 import carts.{Validated, ValidationError}
