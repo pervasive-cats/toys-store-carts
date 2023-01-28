@@ -7,6 +7,8 @@
 package io.github.pervasivecats
 package carts.cart.entities
 
+import AnyOps.===
+import Cart.cartsEquals
 import carts.cart.valueobjects.{CartId, Customer, Store}
 
 trait AssociatedCart extends Cart {
@@ -16,7 +18,15 @@ trait AssociatedCart extends Cart {
 
 object AssociatedCart {
 
-  private case class AssociatedCartImpl(cartId: CartId, store: Store, movable: Boolean, customer: Customer) extends AssociatedCart
+  private case class AssociatedCartImpl(cartId: CartId, store: Store, movable: Boolean, customer: Customer)
+    extends AssociatedCart {
+
+    override def toString: String = s"AssociatedCart(${cartId.value}, ${store.value}, ${customer.value})"
+
+    override def equals(obj: Any): Boolean = cartsEquals(obj)(cartId, store)
+
+    override def hashCode(): Int = cartId.## + store.##
+  }
 
   given AssociatedCartOps[AssociatedCart] with {
 

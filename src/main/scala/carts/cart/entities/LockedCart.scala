@@ -7,13 +7,21 @@
 package io.github.pervasivecats
 package carts.cart.entities
 
+import AnyOps.===
+import Cart.cartsEquals
 import carts.cart.valueobjects.{CartId, Customer, Store}
 
 trait LockedCart extends Cart
 
 object LockedCart {
 
-  private case class LockedCartImpl(cartId: CartId, store: Store, movable: Boolean) extends LockedCart
+  private case class LockedCartImpl(cartId: CartId, store: Store, movable: Boolean) extends LockedCart {
+    override def toString: String = s"LockedCart(${cartId.value}, ${store.value})"
+
+    override def equals(obj: Any): Boolean = cartsEquals(obj)(cartId, store)
+
+    override def hashCode(): Int = cartId.## + store.##
+  }
 
   given LockedCartOps[LockedCart] with {
 
