@@ -22,11 +22,11 @@ import AnyOps.*
 
 trait Repository {
 
-  def findById(cartId: CartId, store: Store): Validated[Cart]
+  def findById(cartId: CartId): Validated[Cart]
 
   def findByStore(store: Store): Validated[Set[Cart]]
 
-  def add(cart: Cart): Validated[Unit]
+  def add(store: Store): Validated[LockedCart]
 
   def update(cart: Cart): Validated[Unit]
 
@@ -60,8 +60,8 @@ object Repository {
       Try(f).getOrElse(Left[ValidationError, A](OperationFailed))
     }
 
-    private def queryById(cartId: CartId, store: Store) = quote {
-      query[Carts].filter(c => c.cartId === lift[Long](cartId.value) && c.store === lift[Long](store.value))
+    private def queryById(cartId: CartId) = quote {
+      query[Carts].filter(c => c.cartId === lift[Long](cartId.value))
     }
 
     private def validateCart(cart: Carts): Validated[Cart] =
@@ -83,9 +83,9 @@ object Repository {
           } yield AssociatedCart(cartId, store, customer)
         )
 
-    override def findById(cartId: CartId, store: Store): Validated[Cart] = protectFromException {
+    override def findById(cartId: CartId): Validated[Cart] = protectFromException {
       ctx
-        .run(queryById(cartId, store))
+        .run(queryById(cartId))
         .map(validateCart)
         .headOption
         .getOrElse(Left[ValidationError, Cart](CartNotFound))
@@ -99,38 +99,24 @@ object Repository {
         .toSet
     ).toEither.map(Right[ValidationError, Set[Cart]]).getOrElse(Left[ValidationError, Set[Cart]](OperationFailed))
 
-    override def add(cart: Cart): Validated[Unit] = protectFromException {
-      ctx.transaction {
-        if (ctx.run(queryById(cart.cartId, cart.store).nonEmpty))
-          Left[ValidationError, Unit](CartAlreadyPresent)
-        else if (
-          ctx.run(
-            query[Carts]
-              .insertValue(
-                lift(
-                  Carts(
-                    cart.cartId.value,
-                    cart.store.value,
-                    cart.movable,
-                    None
-                  )
-                )
-              )
+    override def add(store: Store): Validated[LockedCart] = protectFromException {
+      val cartId: Long = ctx.run(
+        query[Carts]
+          .insert(
+            _.store -> lift[Long](store.value),
+            _.movable -> false,
+            _.customer -> None
           )
-          !==
-          1L
-        )
-          Left[ValidationError, Unit](OperationFailed)
-        else
-          Right[ValidationError, Unit](())
-      }
+          .returningGenerated(_.cartId)
+      )
+      CartId(cartId).map(LockedCart(_, store))
     }
 
     def update(cart: Cart): Validated[Unit] = protectFromException {
       val res = cart match
         case cart: AssociatedCart =>
           ctx.run(
-            queryById(cart.cartId, cart.store).update(
+            queryById(cart.cartId).update(
               _.store -> lift[Long](cart.store.value),
               _.movable -> lift[Boolean](cart.movable),
               _.customer -> Some(lift[String](cart.customer.value))
@@ -138,7 +124,7 @@ object Repository {
           )
         case _ =>
           ctx.run(
-            queryById(cart.cartId, cart.store)
+            queryById(cart.cartId)
               .update(
                 _.store -> lift[Long](cart.store.value),
                 _.movable -> lift[Boolean](cart.movable),
@@ -153,7 +139,7 @@ object Repository {
 
     override def remove(cart: Cart): Validated[Unit] = protectFromException {
       ctx.transaction {
-        if (ctx.run(queryById(cart.cartId, cart.store).delete) !== 1L)
+        if (ctx.run(queryById(cart.cartId).delete) !== 1L)
           Left[ValidationError, Unit](OperationFailed)
         else
           Right[ValidationError, Unit](())

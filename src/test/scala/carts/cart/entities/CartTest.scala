@@ -7,11 +7,11 @@ package io.github.pervasivecats
 package carts.cart.entities
 
 import eu.timepit.refined.auto.given
-import carts.cart.valueobjects.{CartId, Customer, Store}
-
 import org.scalatest.EitherValues.given
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers.*
+
+import carts.cart.valueobjects.{CartId, Customer, Store}
 
 class CartTest extends AnyFunSpec {
 

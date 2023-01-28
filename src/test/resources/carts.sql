@@ -1,10 +1,8 @@
 CREATE TABLE public.carts (
-	id bigserial NOT NULL,
-	cart_id bigint NOT NULL,
+	cart_id bigserial NOT NULL,
 	store bigint NOT NULL,
 	movable boolean NOT NULL,
-	customer character varying(100),
-	UNIQUE(cart_id, store)
+	customer character varying(100)
 );
 
-ALTER TABLE ONLY public.carts ADD CONSTRAINT carts_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.carts ADD CONSTRAINT carts_pkey PRIMARY KEY (cart_id);

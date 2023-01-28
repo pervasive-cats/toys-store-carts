@@ -51,7 +51,6 @@ class RepositoryTest extends AnyFunSpec with TestContainerForAll {
       )
     )
 
-  private val cartId: CartId = CartId(15).getOrElse(fail())
   private val store: Store = Store(200).getOrElse(fail())
   private val customer: Customer = Customer("addr_3ss!@email.com").getOrElse(fail())
 
@@ -59,11 +58,12 @@ class RepositoryTest extends AnyFunSpec with TestContainerForAll {
     describe("after being added to the database") {
       it("should be present in the database") {
         val db: Repository = repository.getOrElse(fail())
-        db.add(LockedCart(cartId, store)).getOrElse(fail())
-        val cart: Cart = db.findById(cartId, store).getOrElse(fail())
-        cart.cartId shouldBe cartId
-        cart.store shouldBe store
-        cart.movable shouldBe false
+        val cart: LockedCart = db.add(store).getOrElse(fail())
+        val foundCart: Cart = db.findById(cart.cartId).getOrElse(fail())
+        foundCart.cartId.value shouldBe cart.cartId.value
+        foundCart.store.value shouldBe cart.store.value
+        foundCart.store shouldBe store
+        foundCart.movable shouldBe false
         db.remove(cart).getOrElse(fail())
       }
     }
@@ -71,113 +71,82 @@ class RepositoryTest extends AnyFunSpec with TestContainerForAll {
     describe("after being added and then deleted from the database") {
       it("should not be present in the database") {
         val db: Repository = repository.getOrElse(fail())
-        val lockedCart: Cart = LockedCart(cartId, store)
-        db.add(lockedCart).getOrElse(fail())
+        val lockedCart: Cart = db.add(store).getOrElse(fail())
         db.remove(lockedCart).getOrElse(fail())
-        db.findById(cartId, store).left.value shouldBe CartNotFound
-      }
-    }
-
-    describe("if already present in the database") {
-      it("should not allow a new registration") {
-        val db: Repository = repository.getOrElse(fail())
-        val lockedCart: Cart = LockedCart(cartId, store)
-        db.add(lockedCart).getOrElse(fail())
-        db.add(lockedCart).left.value shouldBe CartAlreadyPresent
-        db.remove(lockedCart).getOrElse(fail())
-      }
-    }
-
-    describe("if added with the same cart identifier as another cart, but different store") {
-      it("should be added to the database") {
-        val db: Repository = repository.getOrElse(fail())
-        val firstCart = LockedCart(CartId(0).getOrElse(fail()), Store(0).getOrElse(fail()))
-        val secondCart = LockedCart(CartId(0).getOrElse(fail()), Store(1).getOrElse(fail()))
-        db.add(firstCart).getOrElse(fail())
-        db.add(secondCart).getOrElse(fail())
-        db.remove(firstCart).getOrElse(fail())
-        db.remove(secondCart).getOrElse(fail())
+        db.findById(lockedCart.cartId).left.value shouldBe CartNotFound
       }
     }
 
     describe("if never added to the database") {
+      val notExists = LockedCart(CartId(9999).getOrElse(fail()), store)
       it("should not be present") {
         val db: Repository = repository.getOrElse(fail())
-        db.findById(cartId, store).left.value shouldBe CartNotFound
+        db.findById(notExists.cartId).left.value shouldBe CartNotFound
       }
-      it("should not be updatable") {
+      it("should not be updatable or removable") {
         val db: Repository = repository.getOrElse(fail())
-        db.update(LockedCart(cartId, store)).left.value shouldBe OperationFailed
+        db.update(notExists).left.value shouldBe OperationFailed
       }
       it("should not be removable") {
         val db: Repository = repository.getOrElse(fail())
-        db.remove(LockedCart(cartId, store)).left.value shouldBe OperationFailed
+        db.remove(notExists).left.value shouldBe OperationFailed
       }
     }
 
     describe("after being unlocked") {
       it("should show as unlocked in the database") {
         val db: Repository = repository.getOrElse(fail())
-        db.add(LockedCart(cartId, store)).getOrElse(fail())
-        db.findById(cartId, store).getOrElse(fail()).movable shouldBe false
-        db.update(UnlockedCart(cartId, store)).getOrElse(fail())
-        db.findById(cartId, store).getOrElse(fail()).movable shouldBe true
-        db.remove(UnlockedCart(cartId, store)).getOrElse(fail())
+        val cart: Cart = db.add(store).getOrElse(fail())
+        db.findById(cart.cartId).getOrElse(fail()).movable shouldBe false
+        db.update(UnlockedCart(cart.cartId, store)).getOrElse(fail())
+        db.findById(cart.cartId).getOrElse(fail()).movable shouldBe true
+        db.remove(cart).getOrElse(fail())
       }
     }
 
     describe("after being associated to a customer") {
       it("should show the associated customer in the database") {
         val db: Repository = repository.getOrElse(fail())
-        db.add(LockedCart(cartId, store)).getOrElse(fail())
-        db.findById(cartId, store).getOrElse(fail()).movable shouldBe false
-        db.update(AssociatedCart(cartId, store, customer)).getOrElse(fail())
-        val cart: Cart = db.findById(cartId, store).getOrElse(fail())
-        cart match {
-          case cart: AssociatedCart =>
-            cart.movable shouldBe true
-            cart.customer shouldBe customer
+        val cart: Cart = db.add(store).getOrElse(fail())
+        db.findById(cart.cartId).getOrElse(fail()).movable shouldBe false
+        db.update(AssociatedCart(cart.cartId, store, customer)).getOrElse(fail())
+        val foundCart: Cart = db.findById(cart.cartId).getOrElse(fail())
+        foundCart match {
+          case c: AssociatedCart =>
+            c.movable shouldBe true
+            c.customer shouldBe customer
           case _ => fail()
         }
-        db.remove(AssociatedCart(cartId, store, customer)).getOrElse(fail())
+        db.remove(cart).getOrElse(fail())
       }
     }
 
     describe("after being associated then locked again") {
       it("should show as locked in the database") {
         val db: Repository = repository.getOrElse(fail())
-        db.add(LockedCart(cartId, store)).getOrElse(fail())
-        db.update(AssociatedCart(cartId, store, customer)).getOrElse(fail())
-        db.update(LockedCart(cartId, store)).getOrElse(fail())
-        db.findById(cartId, store).getOrElse(fail()).movable shouldBe false
-        db.remove(LockedCart(cartId, store)).getOrElse(fail())
+        val cart: Cart = db.add(store).getOrElse(fail())
+        db.update(AssociatedCart(cart.cartId, store, customer)).getOrElse(fail())
+        db.update(LockedCart(cart.cartId, store)).getOrElse(fail())
+        db.findById(cart.cartId).getOrElse(fail()).movable shouldBe false
+        db.remove(cart).getOrElse(fail())
       }
     }
 
     describe("when queried to retrieve all carts registered with a store") {
       it("should return all the requested carts") {
         val db: Repository = repository.getOrElse(fail())
-        val cartNotInStore: LockedCart = LockedCart(CartId(0).getOrElse(fail()), Store(0).getOrElse(fail()))
-        val lockedCart: LockedCart = LockedCart(CartId(0).getOrElse(fail()), store)
-        val unlockedCartId: Long = 1
-        val unlockedCart: UnlockedCart = UnlockedCart(CartId(unlockedCartId).getOrElse(fail()), store)
-        val associatedCartId: Long = 2
-        val associatedCart: AssociatedCart = AssociatedCart(CartId(associatedCartId).getOrElse(fail()), store, customer)
-
-        db.add(cartNotInStore).getOrElse(fail())
-        db.add(lockedCart).getOrElse(fail())
-        db.add(LockedCart(CartId(unlockedCartId).getOrElse(fail()), store)).getOrElse(fail())
-        db.update(unlockedCart).getOrElse(fail())
-        db.add(LockedCart(CartId(associatedCartId).getOrElse(fail()), store)).getOrElse(fail())
-        db.update(associatedCart).getOrElse(fail())
+        val cartNotInStore: Cart = db.add(Store(9999).getOrElse(fail())).getOrElse(fail())
+        val firstCart: Cart = db.add(store).getOrElse(fail())
+        val secondCart: Cart = db.add(store).getOrElse(fail())
+        val thirdCart: Cart = db.add(store).getOrElse(fail())
 
         db.findByStore(store).getOrElse(fail()).contains(cartNotInStore) shouldBe false
-        db.findByStore(store).getOrElse(fail()) shouldBe Set(lockedCart, unlockedCart, associatedCart)
+        db.findByStore(store).getOrElse(fail()) shouldBe Set(firstCart, secondCart, thirdCart)
 
         db.remove(cartNotInStore).getOrElse(fail())
-        db.remove(lockedCart).getOrElse(fail())
-        db.remove(unlockedCart).getOrElse(fail())
-        db.remove(associatedCart).getOrElse(fail())
+        db.remove(firstCart).getOrElse(fail())
+        db.remove(secondCart).getOrElse(fail())
+        db.remove(thirdCart).getOrElse(fail())
       }
     }
   }
