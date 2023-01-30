@@ -29,9 +29,18 @@ class CartTest extends AnyFunSpec {
         lockedCart shouldBe lockedCart
         lockedCart shouldBe unlockedCart
         lockedCart shouldBe associatedCart
+        unlockedCart shouldBe lockedCart
         unlockedCart shouldBe unlockedCart
         unlockedCart shouldBe associatedCart
+        associatedCart shouldBe lockedCart
+        associatedCart shouldBe unlockedCart
         associatedCart shouldBe associatedCart
+      }
+
+      it("should have the same hash code of that cart") {
+        lockedCart.## shouldBe unlockedCart.##
+        lockedCart.## shouldBe associatedCart.##
+        unlockedCart.## shouldBe associatedCart.##
       }
     }
 
