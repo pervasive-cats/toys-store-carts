@@ -7,12 +7,11 @@
 package io.github.pervasivecats
 package carts.cart.entities
 
-import AnyOps.===
+import java.util.Objects
 
+import AnyOps.===
 import Cart.cartsEquals
 import carts.cart.valueobjects.{CartId, Customer, Store}
-
-import java.util.Objects
 
 trait LockedCart extends Cart
 

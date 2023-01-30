@@ -140,8 +140,8 @@ class RepositoryTest extends AnyFunSpec with TestContainerForAll {
         val secondCart: Cart = db.add(store).getOrElse(fail())
         val thirdCart: Cart = db.add(store).getOrElse(fail())
 
-        db.findByStore(store).getOrElse(fail()).contains(cartNotInStore) shouldBe false
-        db.findByStore(store).getOrElse(fail()) shouldBe Set(firstCart, secondCart, thirdCart)
+        db.findByStore(store).getOrElse(fail()).map(_.getOrElse(fail())).contains(cartNotInStore) shouldBe false
+        db.findByStore(store).getOrElse(fail()).map(_.getOrElse(fail())) shouldBe Set(firstCart, secondCart, thirdCart)
 
         db.remove(cartNotInStore).getOrElse(fail())
         db.remove(firstCart).getOrElse(fail())

@@ -24,7 +24,7 @@ trait Repository {
 
   def findById(cartId: CartId): Validated[Cart]
 
-  def findByStore(store: Store): Validated[Set[Cart]]
+  def findByStore(store: Store): Validated[Set[Validated[Cart]]]
 
   def add(store: Store): Validated[LockedCart]
 
@@ -90,13 +90,14 @@ object Repository {
         .getOrElse(Left[ValidationError, Cart](CartNotFound))
     }
 
-    def findByStore(store: Store): Validated[Set[Cart]] = Try(
+    def findByStore(store: Store): Validated[Set[Validated[Cart]]] = Try(
       ctx
         .run(query[Carts].filter(_.store === lift[Long](store.value)))
         .map(validateCart)
-        .collect { case Right(value) => value }
         .toSet
-    ).toEither.map(Right[ValidationError, Set[Cart]]).getOrElse(Left[ValidationError, Set[Cart]](OperationFailed))
+    ).toEither
+      .map(Right[ValidationError, Set[Validated[Cart]]])
+      .getOrElse(Left[ValidationError, Set[Validated[Cart]]](OperationFailed))
 
     override def add(store: Store): Validated[LockedCart] = protectFromException {
       val cartId: Long = ctx.run(
