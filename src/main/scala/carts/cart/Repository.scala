@@ -71,10 +71,9 @@ object Repository {
           for {
             cartId <- CartId(cart.cartId)
             store <- Store(cart.store)
-          } yield (cartId, store, cart.movable) match {
-            case (cartId, store, true) => UnlockedCart(cartId, store)
-            case (cartId, store, false) => LockedCart(cartId, store)
-          }
+          } yield
+            if cart.movable then UnlockedCart(cartId, store)
+            else LockedCart(cartId, store)
         )(email =>
           for {
             customer <- Customer(email)
@@ -138,12 +137,10 @@ object Repository {
     }
 
     override def remove(cart: Cart): Validated[Unit] = protectFromException {
-      ctx.transaction {
-        if (ctx.run(queryById(cart.cartId).delete) !== 1L)
-          Left[ValidationError, Unit](OperationFailed)
-        else
-          Right[ValidationError, Unit](())
-      }
+      if (ctx.run(queryById(cart.cartId).delete) !== 1L)
+        Left[ValidationError, Unit](OperationFailed)
+      else
+        Right[ValidationError, Unit](())
     }
   }
 
