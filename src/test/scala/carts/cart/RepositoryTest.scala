@@ -17,6 +17,7 @@ import com.dimafeng.testcontainers.PostgreSQLContainer
 import com.dimafeng.testcontainers.scalatest.TestContainerForAll
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigValueFactory
+import eu.timepit.refined.auto.autoUnwrap
 import org.scalatest.EitherValues.given
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers.*
@@ -25,6 +26,7 @@ import org.testcontainers.utility.DockerImageName
 import carts.cart.entities.{AssociatedCart, Cart, LockedCart, UnlockedCart}
 import carts.cart.valueobjects.{CartId, Customer, Store}
 import carts.cart.Repository.{CartAlreadyPresent, CartNotFound, OperationFailed}
+import carts.Validated
 
 class RepositoryTest extends AnyFunSpec with TestContainerForAll {
 
@@ -59,7 +61,7 @@ class RepositoryTest extends AnyFunSpec with TestContainerForAll {
       it("should be present in the database") {
         val db: Repository = repository.getOrElse(fail())
         val cart: LockedCart = db.add(store).getOrElse(fail())
-        val foundCart: Cart = db.findById(cart.cartId).getOrElse(fail())
+        val foundCart: Cart = db.findById(cart.cartId, cart.store).getOrElse(fail())
         foundCart.cartId.value shouldBe cart.cartId.value
         foundCart.store.value shouldBe cart.store.value
         foundCart.store shouldBe store
@@ -73,7 +75,7 @@ class RepositoryTest extends AnyFunSpec with TestContainerForAll {
         val db: Repository = repository.getOrElse(fail())
         val lockedCart: Cart = db.add(store).getOrElse(fail())
         db.remove(lockedCart).getOrElse(fail())
-        db.findById(lockedCart.cartId).left.value shouldBe CartNotFound
+        db.findById(lockedCart.cartId, lockedCart.store).left.value shouldBe CartNotFound
       }
     }
 
@@ -81,7 +83,7 @@ class RepositoryTest extends AnyFunSpec with TestContainerForAll {
       val notExists = LockedCart(CartId(9999).getOrElse(fail()), store)
       it("should not be present") {
         val db: Repository = repository.getOrElse(fail())
-        db.findById(notExists.cartId).left.value shouldBe CartNotFound
+        db.findById(notExists.cartId, notExists.store).left.value shouldBe CartNotFound
       }
       it("should not be updatable or removable") {
         val db: Repository = repository.getOrElse(fail())
@@ -97,9 +99,9 @@ class RepositoryTest extends AnyFunSpec with TestContainerForAll {
       it("should show as unlocked in the database") {
         val db: Repository = repository.getOrElse(fail())
         val cart: Cart = db.add(store).getOrElse(fail())
-        db.findById(cart.cartId).getOrElse(fail()).movable shouldBe false
+        db.findById(cart.cartId, cart.store).getOrElse(fail()).movable shouldBe false
         db.update(UnlockedCart(cart.cartId, store)).getOrElse(fail())
-        db.findById(cart.cartId).getOrElse(fail()).movable shouldBe true
+        db.findById(cart.cartId, cart.store).getOrElse(fail()).movable shouldBe true
         db.remove(cart).getOrElse(fail())
       }
     }
@@ -108,9 +110,9 @@ class RepositoryTest extends AnyFunSpec with TestContainerForAll {
       it("should show the associated customer in the database") {
         val db: Repository = repository.getOrElse(fail())
         val cart: Cart = db.add(store).getOrElse(fail())
-        db.findById(cart.cartId).getOrElse(fail()).movable shouldBe false
+        db.findById(cart.cartId, cart.store).getOrElse(fail()).movable shouldBe false
         db.update(AssociatedCart(cart.cartId, store, customer)).getOrElse(fail())
-        val foundCart: Cart = db.findById(cart.cartId).getOrElse(fail())
+        val foundCart: Cart = db.findById(cart.cartId, cart.store).getOrElse(fail())
         foundCart match {
           case c: AssociatedCart =>
             c.movable shouldBe true
@@ -127,12 +129,35 @@ class RepositoryTest extends AnyFunSpec with TestContainerForAll {
         val cart: Cart = db.add(store).getOrElse(fail())
         db.update(AssociatedCart(cart.cartId, store, customer)).getOrElse(fail())
         db.update(LockedCart(cart.cartId, store)).getOrElse(fail())
-        db.findById(cart.cartId).getOrElse(fail()).movable shouldBe false
+        db.findById(cart.cartId, cart.store).getOrElse(fail()).movable shouldBe false
         db.remove(cart).getOrElse(fail())
       }
     }
+  }
 
-    describe("when queried to retrieve all carts registered with a store") {
+  describe("A cart") {
+    it("should have the next available cart identifier in the store") {
+      val db: Repository = repository.getOrElse(fail())
+      val firstCart: Cart = db.add(store).getOrElse(fail())
+      val secondCart: Cart = db.add(store).getOrElse(fail())
+
+      (secondCart.cartId.value: Long) shouldBe (firstCart.cartId.value: Long) + 1
+      db.remove(firstCart)
+      db.remove(secondCart)
+    }
+    it("should be able to have the same identifier as another cart if the two belong to different stores") {
+      val db: Repository = repository.getOrElse(fail())
+      val firstCart: Cart = db.add(Store(0).getOrElse(fail())).getOrElse(fail())
+      val secondCart: Cart = db.add(Store(1).getOrElse(fail())).getOrElse(fail())
+
+      (firstCart.cartId.value: Long) shouldBe (secondCart.cartId.value: Long)
+      db.remove(firstCart)
+      db.remove(secondCart)
+    }
+  }
+
+  describe("A store") {
+    describe("when queried to retrieve all carts registered within it, and it has some") {
       it("should return all the requested carts") {
         val db: Repository = repository.getOrElse(fail())
         val cartNotInStore: Cart = db.add(Store(9999).getOrElse(fail())).getOrElse(fail())
@@ -147,6 +172,13 @@ class RepositoryTest extends AnyFunSpec with TestContainerForAll {
         db.remove(firstCart).getOrElse(fail())
         db.remove(secondCart).getOrElse(fail())
         db.remove(thirdCart).getOrElse(fail())
+      }
+    }
+
+    describe("when queried to retrieve all carts registered within it, and it has none") {
+      it("should return an empty set") {
+        val db: Repository = repository.getOrElse(fail())
+        db.findByStore(store).getOrElse(fail()) shouldBe (Set.empty: Set[Validated[Cart]])
       }
     }
   }
