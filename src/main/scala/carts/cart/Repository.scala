@@ -120,7 +120,9 @@ object Repository {
                     _.movable -> false,
                     _.customer -> None
                   )
-              ) !== 1L
+              )
+              !==
+              1L
             )
               Left[ValidationError, LockedCart](OperationFailed)
             else
