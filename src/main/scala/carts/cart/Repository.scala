@@ -72,7 +72,8 @@ object Repository {
             cartId <- CartId(cart.cartId)
             store <- Store(cart.store)
           } yield
-            if cart.movable then UnlockedCart(cartId, store)
+            if cart.movable
+            then UnlockedCart(cartId, store)
             else LockedCart(cartId, store)
         )(email =>
           for {
@@ -90,45 +91,44 @@ object Repository {
         .getOrElse(Left[ValidationError, Cart](CartNotFound))
     }
 
-    def findByStore(store: Store): Validated[Set[Validated[Cart]]] = Try(
-      ctx
-        .run(query[Carts].filter(_.store === lift[Long](store.value)))
-        .map(validateCart)
-        .toSet
-    ).toEither
-      .map(Right[ValidationError, Set[Validated[Cart]]])
-      .getOrElse(Left[ValidationError, Set[Validated[Cart]]](OperationFailed))
+    def findByStore(store: Store): Validated[Set[Validated[Cart]]] =
+      Try(
+        ctx
+          .run(query[Carts].filter(_.store === lift[Long](store.value)))
+          .map(validateCart)
+          .toSet
+      )
+        .toEither
+        .map(Right[ValidationError, Set[Validated[Cart]]])
+        .getOrElse(Left[ValidationError, Set[Validated[Cart]]](OperationFailed))
 
     override def add(store: Store): Validated[LockedCart] = protectFromException {
       ctx.transaction {
-        val cartsInStore: Validated[Set[Cart]] = findByStore(store)
-          .map(setOfValidated => {
-            val (left, right) = setOfValidated.partitionMap(identity)
-            if left.isEmpty then Right[ValidationError, Set[Cart]](right) else Left[ValidationError, Set[Cart]](OperationFailed)
-          })
-          .flatten
-
-        cartsInStore
-          .map(_.map[Long](_.cartId.value).maxOption.fold(0L)(_ + 1))
-          .map(nextId =>
-            if (
-              ctx.run(
-                query[Carts]
-                  .insert(
-                    _.cartId -> lift[Long](nextId),
-                    _.store -> lift[Long](store.value),
-                    _.movable -> false,
-                    _.customer -> None
-                  )
-              )
-              !==
-              1L
+        val nextId: Long =
+          ctx
+            .run(
+              query[Carts]
+                .filter(_.store === lift[Long](store.value))
+                .map(_.cartId)
+                .max
             )
-              Left[ValidationError, LockedCart](OperationFailed)
-            else
-              CartId(nextId).map(LockedCart(_, store))
+            .fold(0L)(_ + 1)
+        if (
+          ctx.run(
+            query[Carts]
+              .insert(
+                _.cartId -> lift[Long](nextId),
+                _.store -> lift[Long](store.value),
+                _.movable -> false,
+                _.customer -> None
+              )
           )
-          .getOrElse(Left[ValidationError, LockedCart](OperationFailed))
+          !==
+          1L
+        )
+          Left[ValidationError, LockedCart](OperationFailed)
+        else
+          CartId(nextId).map(LockedCart(_, store))
       }
     }
 
