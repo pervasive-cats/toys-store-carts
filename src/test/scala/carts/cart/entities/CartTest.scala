@@ -51,5 +51,13 @@ class CartTest extends AnyFunSpec {
         associatedCart should not be differentCart
       }
     }
+
+    describe("when compared with an object totally different from it") {
+      it("should not be equal to that object") {
+        lockedCart should not be 1.0
+        unlockedCart should not be 1.0
+        associatedCart should not be 1.0
+      }
+    }
   }
 }
