@@ -32,7 +32,15 @@ lazy val root = project
       postgresql,
       quill,
       testContainers,
-      testContainersPostgresql
+      testContainersPostgresql,
+      akka,
+      akkaStream,
+      akkaHttp,
+      akkaHttpSprayJson,
+      akkaTestKit,
+      rabbitMQ,
+      akkaStreamTestkit,
+      akkaHttpTestkit
     ),
     wartremoverErrors ++= Warts.allBut(Wart.ImplicitParameter),
     version := "0.0.0",
