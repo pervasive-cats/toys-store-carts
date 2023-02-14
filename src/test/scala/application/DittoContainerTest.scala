@@ -31,7 +31,8 @@ import org.testcontainers.containers.wait.strategy.Wait
     "org.wartremover.warts.Var",
     "scalafix:DisableSyntax.var",
     "org.wartremover.warts.StringPlusAny",
-    "org.wartremover.warts.Any"
+    "org.wartremover.warts.Any",
+    "org.wartremover.warts.ToString"
   )
 )
 class DittoContainerTest extends AnyFunSpec with TestContainerForAll {
@@ -73,6 +74,22 @@ class DittoContainerTest extends AnyFunSpec with TestContainerForAll {
         thingsSearchPort.getOrElse(fail()) should be > 0
         connectivityPort.getOrElse(fail()) should be > 0
         gatewayPort.getOrElse(fail()) should be > 0
+      }
+    }
+  }
+
+  describe("An HTTP client") {
+    describe("when asking eclipse-ditto for the things it has") {
+      it("should receive an empty but valid response") {
+        val uriStr = "https://localhost:" + thingsPort.getOrElse(fail()) + "/things"
+        implicit val system = ActorSystem(Behaviors.empty, "SingleRequest")
+        implicit val executionContext = system.executionContext
+        val response: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = uriStr))
+
+        response.onComplete {
+          case Success(res) => res.toString shouldBe ""
+          case Failure(_) => fail()
+        }
       }
     }
   }
