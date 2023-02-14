@@ -10,6 +10,14 @@ package application
 import java.io.File
 import java.time.Duration
 
+import scala.concurrent.Future
+import scala.util.Failure
+import scala.util.Success
+
+import akka.actor.typed.ActorSystem
+import akka.actor.typed.scaladsl.Behaviors
+import akka.http.scaladsl.Http
+import akka.http.scaladsl.model.*
 import com.dimafeng.testcontainers.DockerComposeContainer
 import com.dimafeng.testcontainers.ExposedService
 import com.dimafeng.testcontainers.scalatest.TestContainerForAll
@@ -18,7 +26,14 @@ import org.scalatest.matchers.should.Matchers.*
 import org.testcontainers.containers.Container
 import org.testcontainers.containers.wait.strategy.Wait
 
-@SuppressWarnings(Array("org.wartremover.warts.Var", "scalafix:DisableSyntax.var"))
+@SuppressWarnings(
+  Array(
+    "org.wartremover.warts.Var",
+    "scalafix:DisableSyntax.var",
+    "org.wartremover.warts.StringPlusAny",
+    "org.wartremover.warts.Any"
+  )
+)
 class DittoContainerTest extends AnyFunSpec with TestContainerForAll {
 
   private val port = 8005

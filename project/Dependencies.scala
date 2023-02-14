@@ -20,10 +20,10 @@ object Dependencies {
 
   lazy val akkaStream: ModuleID = "com.typesafe.akka" %% "akka-stream" % "2.7.0"
 
-  lazy val akkaHttp: ModuleID = ("com.typesafe.akka" %% "akka-http" % "10.4.0").cross(CrossVersion.for3Use2_13)
+  lazy val akkaHttp: ModuleID = "com.typesafe.akka" %% "akka-http" % "10.5.0-M1"
 
   lazy val akkaHttpSprayJson: ModuleID =
-    ("com.typesafe.akka" %% "akka-http-spray-json" % "10.4.0").cross(CrossVersion.for3Use2_13)
+    "com.typesafe.akka" %% "akka-http-spray-json" % "10.5.0-M1"
 
   lazy val akkaTestKit: ModuleID = "com.typesafe.akka" %% "akka-actor-testkit-typed" % "2.7.0" % Test
 
@@ -32,5 +32,5 @@ object Dependencies {
   lazy val akkaStreamTestkit: ModuleID = "com.typesafe.akka" %% "akka-stream-testkit" % "2.7.0" % Test
 
   lazy val akkaHttpTestkit: ModuleID =
-    ("com.typesafe.akka" %% "akka-http-testkit" % "10.4.0" % Test).cross(CrossVersion.for3Use2_13)
+    "com.typesafe.akka" %% "akka-http-testkit" % "10.5.0-M1" % Test
 }
