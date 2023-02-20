@@ -7,9 +7,29 @@
 package io.github.pervasivecats
 package carts.cart.services
 
+import akka.actor.typed.ActorRef
+
+import application.actors.DittoCommand
+import application.actors.DittoCommand.RaiseCartAlarm
 import carts.cart.domainevents.CartMoved
+import carts.cart.Repository
+import carts.cart.entities.*
 
 trait CartMovementHandlers {
 
-  def onCartMoved(event: CartMoved): Unit
+  def onCartMoved(event: CartMoved)(using Repository): Validated[Unit]
+}
+
+object CartMovementHandlers {
+
+  private class CartMovementHandlersImpl(dittoActor: ActorRef[DittoCommand]) extends CartMovementHandlers {
+
+    override def onCartMoved(event: CartMoved)(using Repository): Validated[Unit] =
+      summon[Repository].findById(event.cartId, event.store).map {
+        case _: LockedCart => dittoActor ! RaiseCartAlarm(event.cartId, event.store)
+        case _ => ()
+      }
+  }
+
+  def apply(dittoActor: ActorRef[DittoCommand]): CartMovementHandlers = CartMovementHandlersImpl(dittoActor)
 }

@@ -7,16 +7,20 @@
 package io.github.pervasivecats
 package carts.cart.valueobjects.item
 
+import carts.cart.valueobjects.Store
+
 trait Item {
 
   val catalogItem: CatalogItem
+
+  val store: Store
 
   val itemId: ItemId
 }
 
 object Item {
 
-  private case class ItemImpl(catalogItem: CatalogItem, itemId: ItemId) extends Item
+  private case class ItemImpl(catalogItem: CatalogItem, store: Store, itemId: ItemId) extends Item
 
-  def apply(catalogItem: CatalogItem, itemId: ItemId): Item = ItemImpl(catalogItem, itemId)
+  def apply(catalogItem: CatalogItem, store: Store, itemId: ItemId): Item = ItemImpl(catalogItem, store, itemId)
 }

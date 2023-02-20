@@ -7,9 +7,7 @@
 package io.github.pervasivecats
 package carts.cart.services
 
-import carts.cart.domainevents.CustomerUnregistered
+case object EventRejected extends ValidationError {
 
-trait CustomerStateHandlers {
-
-  def onCustomerUnregistered(event: CustomerUnregistered): Unit
+  override val message: String = "The event could not be properly handled"
 }

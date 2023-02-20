@@ -7,9 +7,12 @@
 package io.github.pervasivecats
 package carts.cart.valueobjects
 
+import io.github.pervasivecats.Validated
+import io.github.pervasivecats.ValidationError
+
 import eu.timepit.refined.api.RefType.applyRef
 
-import carts.{Id, Validated, ValidationError}
+import carts.Id
 
 trait CartId {
 

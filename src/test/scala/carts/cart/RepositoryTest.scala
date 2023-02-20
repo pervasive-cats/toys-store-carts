@@ -12,6 +12,9 @@ import java.nio.file.attribute.UserPrincipalNotFoundException
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.duration.FiniteDuration
 
+import io.github.pervasivecats.Validated
+import io.github.pervasivecats.carts.RepositoryOperationFailed
+
 import com.dimafeng.testcontainers.JdbcDatabaseContainer.CommonParams
 import com.dimafeng.testcontainers.PostgreSQLContainer
 import com.dimafeng.testcontainers.scalatest.TestContainerForAll
@@ -25,8 +28,7 @@ import org.testcontainers.utility.DockerImageName
 
 import carts.cart.entities.{AssociatedCart, Cart, LockedCart, UnlockedCart}
 import carts.cart.valueobjects.{CartId, Customer, Store}
-import carts.cart.Repository.{CartAlreadyPresent, CartNotFound, OperationFailed}
-import carts.Validated
+import carts.cart.Repository.CartNotFound
 
 class RepositoryTest extends AnyFunSpec with TestContainerForAll {
 
@@ -48,7 +50,7 @@ class RepositoryTest extends AnyFunSpec with TestContainerForAll {
       Repository(
         ConfigFactory
           .load()
-          .getConfig("ctx")
+          .getConfig("repository")
           .withValue("dataSource.portNumber", ConfigValueFactory.fromAnyRef(containers.container.getFirstMappedPort.intValue()))
       )
     )
@@ -87,11 +89,11 @@ class RepositoryTest extends AnyFunSpec with TestContainerForAll {
       }
       it("should not be updatable or removable") {
         val db: Repository = repository.getOrElse(fail())
-        db.update(notExists).left.value shouldBe OperationFailed
+        db.update(notExists).left.value shouldBe RepositoryOperationFailed
       }
       it("should not be removable") {
         val db: Repository = repository.getOrElse(fail())
-        db.remove(notExists).left.value shouldBe OperationFailed
+        db.remove(notExists).left.value shouldBe RepositoryOperationFailed
       }
     }
 

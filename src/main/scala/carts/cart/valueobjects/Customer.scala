@@ -7,11 +7,12 @@
 package io.github.pervasivecats
 package carts.cart.valueobjects
 
+import io.github.pervasivecats.Validated
+import io.github.pervasivecats.ValidationError
+
 import eu.timepit.refined.api.RefType.applyRef
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.string.MatchesRegex
-
-import carts.{Validated, ValidationError}
 
 type Email = String Refined
   MatchesRegex[

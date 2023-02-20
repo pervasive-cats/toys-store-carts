@@ -12,7 +12,7 @@ import org.scalatest.EitherValues.given
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers.*
 
-import carts.cart.valueobjects.Store.WrongStoreFormat
+import Store.WrongStoreFormat
 
 class StoreTest extends AnyFunSpec {
 

@@ -5,7 +5,6 @@
  */
 
 package io.github.pervasivecats
-package carts
 
 type Validated[A] = Either[ValidationError, A]
 
