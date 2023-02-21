@@ -1,0 +1,218 @@
+{
+    "@context": "https://www.w3.org/2019/wot/td/v1",
+    "title": "Cart",
+    "@type": "tm:ThingModel",
+    "id": "io.github.pervasivecats:cart",
+    "base": "http://localhost/",
+    "description": "A smart cart that can be used by customers for adding products to their own digital cart.",
+    "securityDefinitions": {
+        "nosec_sc": {
+            "scheme": "nosec"
+        }
+    },
+    "security": "nosec_sc",
+    "properties": {
+        "store": {
+            "title": "store",
+            "observable": false,
+            "readOnly": true,
+            "description": "The store in which the cart is placed.",
+            "type": "integer",
+            "minimum": 0,
+            "forms": [
+                {
+                    "op": [
+                        "readproperty"
+                    ],
+                    "href": "cart/properties/store",
+                    "contentType": "application/json"
+                }
+            ]
+        },
+        "movable": {
+            "title": "movable",
+            "observable": false,
+            "readOnly": false,
+            "description": "Whether or not the cart can be moved",
+            "type": "boolean",
+            "forms": [
+                {
+                    "op": [
+                        "writeproperty",
+                        "readproperty"
+                    ],
+                    "href": "cart/properties/movable"
+                }
+            ]
+        },
+        "customer": {
+            "title": "customer",
+            "observable": false,
+            "readOnly": false,
+            "description": "The customer associated with the cart, if present.",
+            "oneOf": [
+                {
+                    "type": "string",
+                    "format": "email"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "forms": [
+                {
+                    "op": [
+                        "writeproperty",
+                        "readproperty"
+                    ],
+                    "href": "cart/properties/customer"
+                }
+            ]
+        }
+    },
+    "actions": {
+        "raiseAlarm": {
+            "title": "raiseAlarm",
+            "description": "Raises the cart alarm, forcing the customer to backing away from the cart.",
+            "forms": [
+                {
+                    "op": [
+                        "invokeaction"
+                    ],
+                    "href": "cart/actions/raiseAlarm",
+                    "contentType": "application/json"
+                }
+            ],
+            "safe": false,
+            "idempotent": true,
+            "input": {
+                "title": "raiseAlarm input schema",
+                "description": "The raiseAlarm action input schema.",
+                "type": "object",
+                "required": [
+                    "cartId",
+                    "store"
+                ],
+                "properties": {
+                    "cartId": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "store": {
+                        "type": "integer",
+                        "minimum": 0
+                    }
+                }
+            },
+            "output": {
+                "title": "raiseAlarm output schema",
+                "description": "The raiseAlarm output schema.",
+                "type": "object",
+                "required": [
+                    "error",
+                    "result"
+                ],
+                "properties": {
+                    "result": {
+                        "type": "integer",
+                        "const": 1
+                    },
+                    "error": {
+                        "type": "object",
+                        "required": [
+                            "type",
+                            "message"
+                        ],
+                        "properties": {
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "CartAlarmNotRaised"
+                                ]
+                            },
+                            "message": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "events": {
+        "itemInsertedIntoCart": {
+            "title": "itemInsertedIntoCart",
+            "description": "A customer inserted an item into the cart.",
+            "forms": [
+                {
+                    "op": [
+                        "subscribeevent"
+                    ],
+                    "href": "cart/events/itemInsertedIntoCart",
+                    "contentType": "application/json"
+                }
+            ],
+            "data": {
+                "title": "itemInsertedIntoCart data schema",
+                "description": "The schema for the itemInsertedIntoCart event data.",
+                "type": "object",
+                "required": [
+                    "customer",
+                    "store",
+                    "catalogItem",
+                    "itemId"
+                ],
+                "properties": {
+                    "customer": {
+                        "type": "string",
+                        "format": "email"
+                    },
+                    "store": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "catalogItem": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "itemId": {
+                        "type": "integer",
+                        "minimum": 0
+                    }
+                }
+            }
+        },
+        "cartMoved": {
+            "title": "cartMoved",
+            "description": "A customer moved the cart.",
+            "forms": [
+                {
+                    "op": [
+                        "subscribeevent"
+                    ],
+                    "href": "cart/events/cartMoved",
+                    "contentType": "application/json"
+                }
+            ],
+            "data": {
+                "title": "cartMoved data schema",
+                "description": "The schema for the cartMoved event data.",
+                "type": "object",
+                "required": [
+                    "cartId",
+                    "store"
+                ],
+                "properties": {
+                    "cartId": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "store": {
+                        "type": "integer",
+                        "minimum": 0
+                    }
+                }
+            }
+        }
+    }
+}
