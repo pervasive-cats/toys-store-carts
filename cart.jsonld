@@ -12,6 +12,23 @@
     },
     "security": "nosec_sc",
     "properties": {
+        "id": {
+            "title": "id",
+            "observable": false,
+            "readOnly": true,
+            "description": "The id of the cart in its store.",
+            "type": "integer",
+            "minimum": 0,
+            "forms": [
+                {
+                    "op": [
+                        "readproperty"
+                    ],
+                    "href": "cart/properties/id",
+                    "contentType": "application/json"
+                }
+            ]
+        },
         "store": {
             "title": "store",
             "observable": false,
@@ -32,13 +49,12 @@
         "movable": {
             "title": "movable",
             "observable": false,
-            "readOnly": false,
-            "description": "Whether or not the cart can be moved",
+            "readOnly": true,
+            "description": "Whether or not the cart can be moved.",
             "type": "boolean",
             "forms": [
                 {
                     "op": [
-                        "writeproperty",
                         "readproperty"
                     ],
                     "href": "cart/properties/movable"
@@ -48,7 +64,7 @@
         "customer": {
             "title": "customer",
             "observable": false,
-            "readOnly": false,
+            "readOnly": true,
             "description": "The customer associated with the cart, if present.",
             "oneOf": [
                 {
@@ -62,7 +78,6 @@
             "forms": [
                 {
                     "op": [
-                        "writeproperty",
                         "readproperty"
                     ],
                     "href": "cart/properties/customer"
@@ -84,29 +99,9 @@
                 }
             ],
             "safe": false,
-            "idempotent": true,
-            "input": {
-                "title": "raiseAlarm input schema",
-                "description": "The raiseAlarm action input schema.",
-                "type": "object",
-                "required": [
-                    "cartId",
-                    "store"
-                ],
-                "properties": {
-                    "cartId": {
-                        "type": "integer",
-                        "minimum": 0
-                    },
-                    "store": {
-                        "type": "integer",
-                        "minimum": 0
-                    }
-                }
-            },
+            "idempotent": false,
+            "input": {},
             "output": {
-                "title": "raiseAlarm output schema",
-                "description": "The raiseAlarm output schema.",
                 "type": "object",
                 "required": [
                     "error",
@@ -127,7 +122,160 @@
                             "type": {
                                 "type": "string",
                                 "enum": [
+                                    "CartAlarmAlreadyRaised",
                                     "CartAlarmNotRaised"
+                                ]
+                            },
+                            "message": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "associate": {
+            "title": "associate",
+            "description": "Associates the cart with the customer who unlocked it.",
+            "forms": [
+                {
+                    "op": [
+                        "invokeaction"
+                    ],
+                    "href": "cart/actions/associate",
+                    "contentType": "application/json"
+                }
+            ],
+            "safe": false,
+            "idempotent": false,
+            "input": {
+                "type": "object",
+                "required": [
+                    "customer"
+                ],
+                "properties": {
+                    "customer": {
+                        "type": "string",
+                        "format": "email"
+                    }
+                }
+            },
+            "output": {
+                "type": "object",
+                "required": [
+                    "error",
+                    "result"
+                ],
+                "properties": {
+                    "result": {
+                        "type": "integer",
+                        "const": 1
+                    },
+                    "error": {
+                        "type": "object",
+                        "required": [
+                            "type",
+                            "message"
+                        ],
+                        "properties": {
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "AlreadyAssociated"
+                                ]
+                            },
+                            "message": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "lock": {
+            "title": "lock",
+            "description": "Locks the cart.",
+            "forms": [
+                {
+                    "op": [
+                        "invokeaction"
+                    ],
+                    "href": "cart/actions/lock",
+                    "contentType": "application/json"
+                }
+            ],
+            "safe": false,
+            "idempotent": false,
+            "input": {},
+            "output": {
+                "type": "object",
+                "required": [
+                    "error",
+                    "result"
+                ],
+                "properties": {
+                    "result": {
+                        "type": "integer",
+                        "const": 1
+                    },
+                    "error": {
+                        "type": "object",
+                        "required": [
+                            "type",
+                            "message"
+                        ],
+                        "properties": {
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "CartAlreadyLocked"
+                                ]
+                            },
+                            "message": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "unlock": {
+            "title": "unlock",
+            "description": "Unlocks the cart.",
+            "forms": [
+                {
+                    "op": [
+                        "invokeaction"
+                    ],
+                    "href": "cart/actions/unlock",
+                    "contentType": "application/json"
+                }
+            ],
+            "safe": false,
+            "idempotent": false,
+            "input": {},
+            "output": {
+                "type": "object",
+                "required": [
+                    "error",
+                    "result"
+                ],
+                "properties": {
+                    "result": {
+                        "type": "integer",
+                        "const": 1
+                    },
+                    "error": {
+                        "type": "object",
+                        "required": [
+                            "type",
+                            "message"
+                        ],
+                        "properties": {
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "CartAlreadyUnlocked"
                                 ]
                             },
                             "message": {
@@ -153,8 +301,6 @@
                 }
             ],
             "data": {
-                "title": "itemInsertedIntoCart data schema",
-                "description": "The schema for the itemInsertedIntoCart event data.",
                 "type": "object",
                 "required": [
                     "customer",
@@ -194,25 +340,7 @@
                     "contentType": "application/json"
                 }
             ],
-            "data": {
-                "title": "cartMoved data schema",
-                "description": "The schema for the cartMoved event data.",
-                "type": "object",
-                "required": [
-                    "cartId",
-                    "store"
-                ],
-                "properties": {
-                    "cartId": {
-                        "type": "integer",
-                        "minimum": 0
-                    },
-                    "store": {
-                        "type": "integer",
-                        "minimum": 0
-                    }
-                }
-            }
+            "data": {}
         }
     }
 }
