@@ -110,7 +110,7 @@ object DittoActor extends SprayJsonSupport {
           .viaMat(
             client.webSocketClientFlow(
               WebSocketRequest(
-                s"ws://${dittoConfig.getString("hostName")}:${dittoConfig.getString("port")}/ws/2",
+                s"ws://${dittoConfig.getString("hostName")}:${dittoConfig.getString("portNumber")}/ws/2",
                 extraHeaders =
                   Seq(Authorization(BasicHttpCredentials(dittoConfig.getString("username"), dittoConfig.getString("password"))))
               )
@@ -123,9 +123,9 @@ object DittoActor extends SprayJsonSupport {
                 case _ => Future.failed[TextMessage.Strict](IllegalArgumentException())
               }
               .mapConcat[DittoCommand](t =>
-                if (t.text === "START-SEND-MESSAGE:ACK") {
+                if (t.text === "START-SEND-MESSAGES:ACK") {
                   ctx.self ! DittoMessagesIncoming
-                  List.empty
+                  Nil
                 } else {
                   t.text.parseJson.asJsObject.getFields("topic", "value") match {
                     case Seq(JsString(topic), value) =>
@@ -162,39 +162,24 @@ object DittoActor extends SprayJsonSupport {
       given ExecutionContext = ExecutionContext.fromExecutor(ForkJoinPool.commonPool())
       response
         .onComplete {
-          case Failure(_) =>
-            root ! Startup(success = false)
-          case Success(_) =>
-            ctx.self ! WebsocketConnected
+          case Failure(_) => root ! Startup(success = false)
+          case Success(r) =>
+            if (r.response.status === StatusCodes.SwitchingProtocols)
+              ctx.self ! WebsocketConnected
+            else
+              root ! Startup(success = false)
         }
-      onWebsocketConnected(
-        root,
-        client,
-        websocket,
-        messageBrokerActor,
-        repositoryConfig,
-        dittoConfig
-      )
+      Behaviors.receiveMessage {
+        case WebsocketConnected =>
+          websocket ! TextMessage("START-SEND-MESSAGES?namespaces=" + dittoConfig.getString("namespace"))
+          Behaviors.receiveMessage {
+            case DittoMessagesIncoming => onDittoMessagesIncoming(root, client, messageBrokerActor, repositoryConfig, dittoConfig)
+            case _ => Behaviors.unhandled
+          }
+        case _ => Behaviors.unhandled[DittoCommand]
+      }
     }
   }
-
-  private def onWebsocketConnected(
-    root: ActorRef[RootCommand],
-    client: HttpExt,
-    websocket: UntypedActorRef,
-    messageBrokerActor: ActorRef[MessageBrokerCommand],
-    repositoryConfig: Config,
-    dittoConfig: Config
-  )(
-    using
-    ExecutionContext
-  ): Behavior[DittoCommand] =
-    Behaviors.receiveMessage {
-      case WebsocketConnected =>
-        websocket ! ("START-SEND-MESSAGE?namespaces=" + dittoConfig.getString("namespace"))
-        onDittoMessagesIncoming(root, client, messageBrokerActor, repositoryConfig, dittoConfig)
-      case _ => Behaviors.unhandled[DittoCommand]
-    }
 
   private def onDittoMessagesIncoming(
     root: ActorRef[RootCommand],
@@ -219,7 +204,7 @@ object DittoActor extends SprayJsonSupport {
                 Put(
                   uri(
                     dittoConfig.getString("hostName"),
-                    dittoConfig.getString("port"),
+                    dittoConfig.getString("portNumber"),
                     dittoConfig.getString("namespace"),
                     cartId,
                     store
@@ -246,7 +231,7 @@ object DittoActor extends SprayJsonSupport {
                 Delete(
                   uri(
                     dittoConfig.getString("hostName"),
-                    dittoConfig.getString("port"),
+                    dittoConfig.getString("portNumber"),
                     dittoConfig.getString("namespace"),
                     cartId,
                     store
@@ -265,7 +250,7 @@ object DittoActor extends SprayJsonSupport {
               Post(
                 uri(
                   dittoConfig.getString("hostName"),
-                  dittoConfig.getString("port"),
+                  dittoConfig.getString("portNumber"),
                   dittoConfig.getString("namespace"),
                   cartId,
                   store
@@ -283,7 +268,7 @@ object DittoActor extends SprayJsonSupport {
                 Post(
                   uri(
                     dittoConfig.getString("hostName"),
-                    dittoConfig.getString("port"),
+                    dittoConfig.getString("portNumber"),
                     dittoConfig.getString("namespace"),
                     cartId,
                     store
@@ -304,7 +289,7 @@ object DittoActor extends SprayJsonSupport {
                 Post(
                   uri(
                     dittoConfig.getString("hostName"),
-                    dittoConfig.getString("port"),
+                    dittoConfig.getString("portNumber"),
                     dittoConfig.getString("namespace"),
                     cartId,
                     store
@@ -324,7 +309,7 @@ object DittoActor extends SprayJsonSupport {
                 Post(
                   uri(
                     dittoConfig.getString("hostName"),
-                    dittoConfig.getString("port"),
+                    dittoConfig.getString("portNumber"),
                     dittoConfig.getString("namespace"),
                     cartId,
                     store

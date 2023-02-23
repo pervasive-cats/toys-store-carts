@@ -9,9 +9,7 @@ package application.actors
 
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.duration.FiniteDuration
-
 import io.github.pervasivecats.Validated
-
 import akka.actor.testkit.typed.scaladsl.ActorTestKit
 import akka.actor.testkit.typed.scaladsl.TestProbe
 import akka.actor.typed.ActorRef
@@ -25,15 +23,8 @@ import org.scalatest.OptionValues.given
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers.*
 import org.testcontainers.utility.DockerImageName
-
 import application.actors.MessageBrokerCommand.CartAssociated
-import application.actors.DittoCommand.{
-  AddCart as DittoAddCart,
-  AssociateCart as DittoAssociateCart,
-  RemoveCart as DittoRemoveCart,
-  LockCart as DittoLockCart,
-  UnlockCart as DittoUnlockCart
-}
+import application.actors.DittoCommand.{AddCart as DittoAddCart, AssociateCart as DittoAssociateCart, LockCart as DittoLockCart, RemoveCart as DittoRemoveCart, UnlockCart as DittoUnlockCart}
 import application.actors.CartServerCommand.*
 import application.actors.RootCommand.Startup
 import application.routes.entities.CartEntity.StoreCartsShowEntity
@@ -45,7 +36,9 @@ import carts.RepositoryOperationFailed
 import carts.cart.Repository
 import carts.cart.domainevents.CartAssociated as CartAssociatedEvent
 
-class CartServerActorTest extends AnyFunSpec with TestContainerForAll {
+import org.scalatest.BeforeAndAfterAll
+
+class CartServerActorTest extends AnyFunSpec with TestContainerForAll with BeforeAndAfterAll {
 
   private val timeout: FiniteDuration = 300.seconds
 
@@ -85,6 +78,8 @@ class CartServerActorTest extends AnyFunSpec with TestContainerForAll {
         )
       )
     )
+    
+  override def afterAll(): Unit = testKit.shutdownTestKit()
 
   private def checkAddition(store: Store): CartId =
     val dittoMessage: DittoAddCart = dittoActorProbe.expectMessageType[DittoAddCart](10.seconds)

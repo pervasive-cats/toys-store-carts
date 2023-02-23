@@ -106,6 +106,8 @@ class MessageBrokerActorTest extends AnyFunSpec with TestContainerForAll with Be
     channel.basicConsume("carts_shopping", true, forwardToQueue(shoppingQueue), (_: String) => {})
   }
 
+  override def afterAll(): Unit = testKit.shutdownTestKit()
+
   describe("A message broker actor") {
     describe("after being created") {
       it("should notify its root actor about it") {
