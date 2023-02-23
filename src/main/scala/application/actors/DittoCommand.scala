@@ -7,17 +7,34 @@
 package io.github.pervasivecats
 package application.actors
 
-import carts.cart.valueobjects.{CartId, Store}
+import akka.actor.typed.ActorRef
+
+import carts.cart.valueobjects.{CartId, Customer, Store}
 import carts.cart.valueobjects.item.{CatalogItem, ItemId}
 
 sealed trait DittoCommand
 
 object DittoCommand {
 
+  case object WebsocketConnected extends DittoCommand
+
+  case object DittoMessagesIncoming extends DittoCommand
+
+  final case class AddCart(cartId: CartId, store: Store, replyTo: ActorRef[Validated[Unit]]) extends DittoCommand
+
+  final case class RemoveCart(cartId: CartId, store: Store, replyTo: ActorRef[Validated[Unit]]) extends DittoCommand
+
+  final case class RaiseCartAlarm(cartId: CartId, store: Store) extends DittoCommand
+
+  final case class AssociateCart(cartId: CartId, store: Store, customer: Customer, replyTo: ActorRef[Validated[Unit]])
+    extends DittoCommand
+
+  final case class UnlockCart(cartId: CartId, store: Store, replyTo: ActorRef[Validated[Unit]]) extends DittoCommand
+
+  final case class LockCart(cartId: CartId, store: Store, replyTo: ActorRef[Validated[Unit]]) extends DittoCommand
+
   final case class ItemInsertedIntoCart(cartId: CartId, store: Store, catalogItem: CatalogItem, itemId: ItemId)
     extends DittoCommand
 
   final case class CartMoved(cartId: CartId, store: Store) extends DittoCommand
-
-  final case class RaiseCartAlarm(cartId: CartId, store: Store) extends DittoCommand
 }

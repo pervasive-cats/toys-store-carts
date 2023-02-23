@@ -31,11 +31,20 @@ object RootActor {
       Behaviors.receiveMessage {
         case Startup(true) =>
           val repositoryConfig: Config = config.getConfig("repository")
-          awaitServers(
-            ctx.spawn(CartServerActor(ctx.self, messageBrokerActor, repositoryConfig), name = "cart_server"),
-            config.getConfig("server"),
-            count = 0
+          val dittoActor: ActorRef[DittoCommand] = ctx.spawn(
+            DittoActor(ctx.self, messageBrokerActor, repositoryConfig, config.getConfig("ditto")),
+            name = "ditto_actor"
           )
+          val serverConfig: Config = config.getConfig("server")
+          Behaviors.receiveMessage {
+            case Startup(true) =>
+              awaitServers(
+                ctx.spawn(CartServerActor(ctx.self, messageBrokerActor, dittoActor, repositoryConfig), name = "cart_server"),
+                serverConfig,
+                count = 0
+              )
+            case Startup(false) => Behaviors.stopped[RootCommand]
+          }
         case Startup(false) => Behaviors.stopped[RootCommand]
       }
     }
