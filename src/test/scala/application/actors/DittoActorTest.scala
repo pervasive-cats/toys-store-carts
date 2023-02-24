@@ -65,7 +65,7 @@ import carts.cart.Repository.CartNotFound
 import carts.cart.valueobjects.item.{CatalogItem, ItemId}
 import carts.cart.Repository
 import carts.cart.domainevents.{ItemInsertedIntoCart, ItemAddedToCart as ItemAddedToCartEvent}
-import carts.cart.entities.*
+import carts.cart.entities.* // scalafix:ok
 
 @Ignore
 class DittoActorTest extends AnyFunSpec with BeforeAndAfterAll with SprayJsonSupport {
@@ -138,9 +138,6 @@ class DittoActorTest extends AnyFunSpec with BeforeAndAfterAll with SprayJsonSup
 
   override def beforeAll(): Unit = {
     val latch: CountDownLatch = CountDownLatch(1)
-    val topicMatcher: Regex =
-      (Pattern.quote(dittoConfig.getString("namespace"))
-        + "/cart-(?<cartId>[0-9]+)-(?<store>[0-9]+)/things/live/messages/(?<messageSubject>[a-zA-Z]+)").r
     val (websocket, response): (UntypedActorRef, Future[WebSocketUpgradeResponse]) =
       Source
         .actorRef[Message](
