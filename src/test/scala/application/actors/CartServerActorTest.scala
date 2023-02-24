@@ -9,7 +9,9 @@ package application.actors
 
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.duration.FiniteDuration
+
 import io.github.pervasivecats.Validated
+
 import akka.actor.testkit.typed.scaladsl.ActorTestKit
 import akka.actor.testkit.typed.scaladsl.TestProbe
 import akka.actor.typed.ActorRef
@@ -18,13 +20,21 @@ import com.dimafeng.testcontainers.PostgreSQLContainer
 import com.dimafeng.testcontainers.scalatest.TestContainerForAll
 import com.typesafe.config.*
 import eu.timepit.refined.auto.autoUnwrap
+import org.scalatest.BeforeAndAfterAll
 import org.scalatest.EitherValues.given
 import org.scalatest.OptionValues.given
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers.*
 import org.testcontainers.utility.DockerImageName
+
 import application.actors.MessageBrokerCommand.CartAssociated
-import application.actors.DittoCommand.{AddCart as DittoAddCart, AssociateCart as DittoAssociateCart, LockCart as DittoLockCart, RemoveCart as DittoRemoveCart, UnlockCart as DittoUnlockCart}
+import application.actors.DittoCommand.{
+  AddCart as DittoAddCart,
+  AssociateCart as DittoAssociateCart,
+  LockCart as DittoLockCart,
+  RemoveCart as DittoRemoveCart,
+  UnlockCart as DittoUnlockCart
+}
 import application.actors.CartServerCommand.*
 import application.actors.RootCommand.Startup
 import application.routes.entities.CartEntity.StoreCartsShowEntity
@@ -35,8 +45,6 @@ import carts.cart.Repository.CartNotFound
 import carts.RepositoryOperationFailed
 import carts.cart.Repository
 import carts.cart.domainevents.CartAssociated as CartAssociatedEvent
-
-import org.scalatest.BeforeAndAfterAll
 
 class CartServerActorTest extends AnyFunSpec with TestContainerForAll with BeforeAndAfterAll {
 
@@ -78,7 +86,7 @@ class CartServerActorTest extends AnyFunSpec with TestContainerForAll with Befor
         )
       )
     )
-    
+
   override def afterAll(): Unit = testKit.shutdownTestKit()
 
   private def checkAddition(store: Store): CartId =

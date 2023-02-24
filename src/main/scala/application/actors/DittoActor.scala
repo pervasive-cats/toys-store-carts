@@ -18,7 +18,7 @@ import scala.util.matching.Regex
 
 import akka.Done
 import akka.NotUsed
-import akka.actor.{ActorRef => UntypedActorRef}
+import akka.actor.ActorRef as UntypedActorRef
 import akka.actor.ActorSystem
 import akka.actor.typed.ActorRef
 import akka.actor.typed.Behavior
@@ -44,6 +44,7 @@ import com.typesafe.config.Config
 import spray.json.JsNumber
 import spray.json.JsObject
 import spray.json.JsString
+import spray.json.JsValue
 import spray.json.enrichAny
 import spray.json.enrichString
 
@@ -85,18 +86,55 @@ object DittoActor extends SprayJsonSupport {
   }
 
   private def uri(hostName: String, port: String, namespace: String, cartId: CartId, store: Store): String =
-    s"http://$hostName:$port/api/2/things/$namespace:cart-$cartId-$store"
+    s"http://$hostName:$port/api/2/things/$namespace:cart-${cartId.value}-${store.value}"
+
+  private case class DittoData(
+    direction: String,
+    messageSubject: String,
+    cartId: CartId,
+    store: Store,
+    payload: Seq[(String, JsValue)]
+  )
+
+  private def parseDittoProtocol(namespace: String, message: String): Option[DittoData] = {
+    val thingIdMatcher: Regex = (Pattern.quote(namespace) + ":cart-(?<cartId>[0-9]+)-(?<store>[0-9]+)").r
+    message.parseJson.asJsObject.getFields("headers", "value") match {
+      case Seq(headers, value) =>
+        headers
+          .asJsObject
+          .getFields("ditto-message-direction", "ditto-message-subject", "ditto-message-thing-id") match {
+            case Seq(JsString(direction), JsString(messageSubject), JsString(thingIdMatcher(cartId, store)))
+                 if cartId.toLongOption.isDefined && store.toLongOption.isDefined =>
+              (for {
+                c <- CartId(cartId.toLong)
+                s <- Store(store.toLong)
+              } yield Some(DittoData(direction, messageSubject, c, s, value.asJsObject.fields.toSeq.sortBy(_._1))))
+                .getOrElse(None)
+            case _ => None
+          }
+      case Seq(headers) =>
+        headers
+          .asJsObject
+          .getFields("ditto-message-direction", "ditto-message-subject", "ditto-message-thing-id") match {
+            case Seq(JsString(direction), JsString(messageSubject), JsString(thingIdMatcher(cartId, store)))
+                 if cartId.toLongOption.isDefined && store.toLongOption.isDefined =>
+              (for {
+                c <- CartId(cartId.toLong)
+                s <- Store(store.toLong)
+              } yield Some(DittoData(direction, messageSubject, c, s, Seq.empty))).getOrElse(None)
+            case _ => None
+          }
+      case _ => None
+    }
+  }
 
   def apply(
     root: ActorRef[RootCommand],
     messageBrokerActor: ActorRef[MessageBrokerCommand],
     repositoryConfig: Config,
     dittoConfig: Config
-  ): Behavior[DittoCommand] = {
+  ): Behavior[DittoCommand] =
     Behaviors.setup[DittoCommand] { ctx =>
-      val topicMatcher: Regex =
-        (Pattern.quote(dittoConfig.getString("namespace"))
-          + "/cart-(?<cartId>[0-9]+)-(?<store>[0-9]+)/things/twin/messages/(?<messageSubject>[a-zA-Z]+)").r
       val client: HttpExt = Http()(ctx.system.classicSystem)
       given ActorSystem = ctx.system.classicSystem
       val (websocket, response): (UntypedActorRef, Future[WebSocketUpgradeResponse]) =
@@ -124,39 +162,29 @@ object DittoActor extends SprayJsonSupport {
               }
               .mapConcat[DittoCommand](t =>
                 if (t.text === "START-SEND-MESSAGES:ACK") {
-                  ctx.self ! DittoMessagesIncoming
-                  Nil
+                  DittoMessagesIncoming :: Nil
                 } else {
-                  t.text.parseJson.asJsObject.getFields("topic", "value") match {
-                    case Seq(JsString(topic), value) =>
-                      topic match {
-                        case topicMatcher(cartId, store, messageSubject)
-                             if cartId.toLongOption.isDefined && store.toLongOption.isDefined =>
-                          (messageSubject, value.asJsObject.fields.toSeq.sortBy(_._1)) match {
-                            case (
-                                   "itemInsertedIntoCart",
-                                   Seq("catalogItem" -> JsNumber(catalogItem), "itemId" -> JsNumber(itemId))
-                                 ) if catalogItem.isValidLong && itemId.isValidLong =>
-                              (for {
-                                c <- CartId(cartId.toLong)
-                                s <- Store(store.toLong)
-                                k <- CatalogItem(catalogItem.longValue)
-                                i <- ItemId(itemId.longValue)
-                              } yield ItemInsertedIntoCart(c, s, k, i) :: Nil).getOrElse(Nil)
-                            case ("cartMoved", Seq()) =>
-                              (for {
-                                c <- CartId(cartId.toLong)
-                                s <- Store(store.toLong)
-                              } yield CartMoved(c, s) :: Nil).getOrElse(Nil)
-                          }
-                        case _ => Nil
-                      }
+                  parseDittoProtocol(dittoConfig.getString("namespace"), t.text) match {
+                    case Some(
+                           DittoData(
+                             "FROM",
+                             "itemInsertedIntoCart",
+                             cartId,
+                             store,
+                             Seq("catalogItem" -> JsNumber(catalogItem), "itemId" -> JsNumber(itemId))
+                           )
+                         ) if catalogItem.isValidLong && itemId.isValidLong =>
+                      (for {
+                        k <- CatalogItem(catalogItem.longValue)
+                        i <- ItemId(itemId.longValue)
+                      } yield ItemInsertedIntoCart(cartId, store, k, i) :: Nil).getOrElse(Nil)
+                    case Some(DittoData("FROM", "cartMoved", cartId, store, Seq())) =>
+                      CartMoved(cartId, store) :: Nil
                     case _ => Nil
                   }
                 }
               )
-              .map(ctx.self ! _)
-              .to(Sink.ignore)
+              .to(Sink.foreach(ctx.self ! _))
           )(Keep.left)
           .run()
       given ExecutionContext = ExecutionContext.fromExecutor(ForkJoinPool.commonPool())
@@ -179,7 +207,6 @@ object DittoActor extends SprayJsonSupport {
         case _ => Behaviors.unhandled[DittoCommand]
       }
     }
-  }
 
   private def onDittoMessagesIncoming(
     root: ActorRef[RootCommand],
@@ -210,7 +237,7 @@ object DittoActor extends SprayJsonSupport {
                     store
                   ),
                   JsObject(
-                    "definition" -> "https://raw.githubusercontent.com/pervasive-cats/toys-store-carts/main/cart.jsonld".toJson,
+                    "definition" -> dittoConfig.getString("thingModel").toJson,
                     "attributes" -> JsObject(
                       "id" -> cartId.toJson,
                       "store" -> store.toJson,
@@ -240,6 +267,20 @@ object DittoActor extends SprayJsonSupport {
                   .addHeader(
                     Authorization(BasicHttpCredentials(dittoConfig.getString("username"), dittoConfig.getString("password")))
                   )
+              )
+              .flatMap(r =>
+                r.status match {
+                  case StatusCodes.NoContent =>
+                    client.singleRequest(
+                      Delete(
+                        s"http://${dittoConfig.getString("hostName")}:${dittoConfig.getString("portNumber")}"
+                        + s"/api/2/policies/${dittoConfig.getString("namespace")}:cart-${cartId.value}-${store.value}"
+                      ).addHeader(
+                        Authorization(BasicHttpCredentials(dittoConfig.getString("username"), dittoConfig.getString("password")))
+                      )
+                    )
+                  case _ => Future.successful(r)
+                }
               ),
             replyTo,
             ctx.executionContext
