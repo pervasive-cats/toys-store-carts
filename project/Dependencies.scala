@@ -8,7 +8,7 @@ object Dependencies {
 
   lazy val refined: ModuleID = "eu.timepit" %% "refined" % "0.10.1"
 
-  lazy val postgresql: ModuleID = "org.postgresql" % "postgresql" % "42.5.1"
+  lazy val postgresql: ModuleID = "org.postgresql" % "postgresql" % "42.5.4"
 
   lazy val quill: ModuleID = "io.getquill" %% "quill-jdbc" % "4.6.0.1"
 
