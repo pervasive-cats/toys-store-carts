@@ -1,4 +1,4 @@
-FROM eclipse-temurin:17.0.5_8-jre
+FROM eclipse-temurin:17.0.6_10-jre
 
 RUN mkdir /opt/app
 RUN curl -s https://api.github.com/repos/pervasive-cats/toys-store-carts/releases/latest \
