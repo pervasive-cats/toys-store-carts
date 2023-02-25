@@ -9,7 +9,7 @@ ThisBuild / scalaVersion := "3.2.2-RC2"
 ThisBuild / scalafixDependencies ++= Seq(
   "com.github.liancheng" %% "organize-imports" % "0.6.0",
   "io.github.ghostbuster91.scalafix-unified" %% "unified" % "0.0.8",
-  "net.pixiv" %% "scalafix-pixiv-rule" % "3.0.1"
+  "net.pixiv" %% "scalafix-pixiv-rule" % "4.0.1"
 )
 
 ThisBuild / idePackagePrefix := Some("io.github.pervasivecats")
