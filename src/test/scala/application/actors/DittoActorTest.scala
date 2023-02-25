@@ -1,5 +1,5 @@
 /*
- * Copyright © 6022-6023 by Pervasive Cats S.r.l.s.
+ * Copyright © 2022-2023 by Pervasive Cats S.r.l.s.
  *
  * All Rights Reserved.
  */
@@ -10,15 +10,13 @@ package application.actors
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ForkJoinPool
 import java.util.regex.Pattern
-
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration.DurationInt
 import scala.util.Failure
 import scala.util.Success
 import scala.util.matching.Regex
-
-import akka.actor.{ActorRef => UntypedActorRef}
+import akka.actor.ActorRef as UntypedActorRef
 import akka.actor.ActorSystem
 import akka.actor.testkit.typed.scaladsl.ActorTestKit
 import akka.actor.testkit.typed.scaladsl.TestProbe
@@ -42,8 +40,7 @@ import akka.stream.scaladsl.Source
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import eu.timepit.refined.auto.autoUnwrap
-import org.scalatest.BeforeAndAfterAll
-import org.scalatest.Ignore
+import org.scalatest.{BeforeAndAfterAll, DoNotDiscover, Ignore, Tag}
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers.*
 import spray.json.JsBoolean
@@ -53,7 +50,6 @@ import spray.json.JsString
 import spray.json.JsValue
 import spray.json.enrichAny
 import spray.json.enrichString
-
 import application.actors.DittoActor.DittoError
 import application.actors.DittoCommand.*
 import application.actors.MessageBrokerCommand.ItemAddedToCart
@@ -67,7 +63,7 @@ import carts.cart.Repository
 import carts.cart.domainevents.{ItemInsertedIntoCart, ItemAddedToCart as ItemAddedToCartEvent}
 import carts.cart.entities.* // scalafix:ok
 
-@Ignore
+@DoNotDiscover
 class DittoActorTest extends AnyFunSpec with BeforeAndAfterAll with SprayJsonSupport {
 
   private val testKit: ActorTestKit = ActorTestKit()
@@ -263,13 +259,13 @@ class DittoActorTest extends AnyFunSpec with BeforeAndAfterAll with SprayJsonSup
   describe("A Ditto actor") {
 
     describe("when first started up") {
-      it("should notify the root actor of its start") {
+      ignore("should notify the root actor of its start") {
         rootActorProbe.expectMessage(60.seconds, Startup(true))
       }
     }
 
     describe("after being asked to move a cart when it is locked") {
-      it("should send a message to itself raising the cart alarm") {
+      ignore("should send a message to itself raising the cart alarm") {
         val lockedCart: LockedCart = repository.add(store).getOrElse(fail())
         dittoActor ! AddCart(lockedCart.cartId, store, responseProbe.ref)
         responseProbe.expectMessage(60.seconds, Right[ValidationError, Unit](()))
@@ -297,7 +293,7 @@ class DittoActorTest extends AnyFunSpec with BeforeAndAfterAll with SprayJsonSup
     }
 
     describe("after being asked to move a cart when it is unlocked") {
-      it("should do nothing") {
+      ignore("should do nothing") {
         val lockedCart: LockedCart = repository.add(store).getOrElse(fail())
         repository.update(UnlockedCart(lockedCart.cartId, store)).getOrElse(fail())
         dittoActor ! AddCart(lockedCart.cartId, store, responseProbe.ref)
@@ -326,7 +322,7 @@ class DittoActorTest extends AnyFunSpec with BeforeAndAfterAll with SprayJsonSup
     }
 
     describe("after being asked to move a cart when it is associated") {
-      it("should do nothing") {
+      ignore("should do nothing") {
         val lockedCart: LockedCart = repository.add(store).getOrElse(fail())
         repository.update(AssociatedCart(lockedCart.cartId, store, customer)).getOrElse(fail())
         dittoActor ! AddCart(lockedCart.cartId, store, responseProbe.ref)
@@ -355,7 +351,7 @@ class DittoActorTest extends AnyFunSpec with BeforeAndAfterAll with SprayJsonSup
     }
 
     describe("after being asked to insert an item into a locked cart") {
-      it("should send a message to itself raising the cart alarm") {
+      ignore("should send a message to itself raising the cart alarm") {
         val lockedCart: LockedCart = repository.add(store).getOrElse(fail())
         dittoActor ! AddCart(lockedCart.cartId, store, responseProbe.ref)
         responseProbe.expectMessage(60.seconds, Right[ValidationError, Unit](()))
@@ -387,7 +383,7 @@ class DittoActorTest extends AnyFunSpec with BeforeAndAfterAll with SprayJsonSup
     }
 
     describe("after being asked to insert an item into an unlocked cart") {
-      it("should send a message to itself raising the cart alarm") {
+      ignore("should send a message to itself raising the cart alarm") {
         val lockedCart: LockedCart = repository.add(store).getOrElse(fail())
         repository.update(UnlockedCart(lockedCart.cartId, store)).getOrElse(fail())
         dittoActor ! AddCart(lockedCart.cartId, store, responseProbe.ref)
@@ -420,7 +416,7 @@ class DittoActorTest extends AnyFunSpec with BeforeAndAfterAll with SprayJsonSup
     }
 
     describe("after being asked to insert an item into an associated cart") {
-      it("should send a message to the message broker actor") {
+      ignore("should send a message to the message broker actor") {
         val lockedCart: LockedCart = repository.add(store).getOrElse(fail())
         repository.update(AssociatedCart(lockedCart.cartId, store, customer)).getOrElse(fail())
         dittoActor ! AddCart(lockedCart.cartId, store, responseProbe.ref)
@@ -458,7 +454,7 @@ class DittoActorTest extends AnyFunSpec with BeforeAndAfterAll with SprayJsonSup
 
   describe("A locked cart") {
     describe("after being added as a digital twin") {
-      it("should be present in the Ditto service") {
+      ignore("should be present in the Ditto service") {
         dittoActor ! AddCart(cartId, store, responseProbe.ref)
         responseProbe.expectMessage(60.seconds, Right[ValidationError, Unit](()))
         checkCartPresence(cartId, store)
@@ -469,11 +465,11 @@ class DittoActorTest extends AnyFunSpec with BeforeAndAfterAll with SprayJsonSup
     }
 
     describe("if never added as a digital twin") {
-      it("should not be present in the Ditto service") {
+      ignore("should not be present in the Ditto service") {
         checkCartAbsence()
       }
 
-      it("should not be removable") {
+      ignore("should not be removable") {
         dittoActor ! RemoveCart(cartId, store, responseProbe.ref)
         checkCartAbsence()
         responseProbe.expectMessage(60.seconds, Left[ValidationError, Unit](CartNotFound))
@@ -481,7 +477,7 @@ class DittoActorTest extends AnyFunSpec with BeforeAndAfterAll with SprayJsonSup
     }
 
     describe("after being unlocked") {
-      it("should show as unlocked in the Ditto service") {
+      ignore("should show as unlocked in the Ditto service") {
         dittoActor ! AddCart(cartId, store, responseProbe.ref)
         responseProbe.expectMessage(60.seconds, Right[ValidationError, Unit](()))
         checkCartPresence(cartId, store)
@@ -495,7 +491,7 @@ class DittoActorTest extends AnyFunSpec with BeforeAndAfterAll with SprayJsonSup
     }
 
     describe("after being associated to a customer") {
-      it("should show the associated customer in the Ditto service") {
+      ignore("should show the associated customer in the Ditto service") {
         dittoActor ! AddCart(cartId, store, responseProbe.ref)
         responseProbe.expectMessage(60.seconds, Right[ValidationError, Unit](()))
         checkCartPresence(cartId, store)
@@ -509,7 +505,7 @@ class DittoActorTest extends AnyFunSpec with BeforeAndAfterAll with SprayJsonSup
     }
 
     describe("after being associated then locked again") {
-      it("should show as locked in the Ditto service") {
+      ignore("should show as locked in the Ditto service") {
         dittoActor ! AddCart(cartId, store, responseProbe.ref)
         responseProbe.expectMessage(60.seconds, Right[ValidationError, Unit](()))
         checkCartPresence(cartId, store)
