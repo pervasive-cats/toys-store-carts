@@ -6,12 +6,12 @@
 
 package io.github.pervasivecats
 
-import application.actors.RootActor
+import java.nio.file.Paths
 
 import akka.actor.typed.ActorSystem
 import com.typesafe.config.ConfigFactory
 
-import java.nio.file.Paths
+import application.actors.RootActor
 
 @main
 def main(path: String): Unit =
