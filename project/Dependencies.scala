@@ -32,5 +32,5 @@ object Dependencies {
   lazy val akkaStreamTestkit: ModuleID = "com.typesafe.akka" %% "akka-stream-testkit" % "2.7.0" % Test
 
   lazy val akkaHttpTestkit: ModuleID =
-    "com.typesafe.akka" %% "akka-http-testkit" % "10.5.0-M1" % Test
+    "com.typesafe.akka" %% "akka-http-testkit" % "10.5.0" % Test
 }
