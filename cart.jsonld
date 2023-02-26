@@ -37,8 +37,7 @@
                     "op": [
                         "readproperty"
                     ],
-                    "href": "/attributes/id",
-                    "contentType": "application/json"
+                    "href": "/attributes/id"
                 }
             ]
         },
@@ -54,8 +53,7 @@
                     "op": [
                         "readproperty"
                     ],
-                    "href": "/attributes/store",
-                    "contentType": "application/json"
+                    "href": "/attributes/store"
                 }
             ]
         },
@@ -108,43 +106,65 @@
                         "invokeaction"
                     ],
                     "href": "/messages/inbox/raiseAlarm",
-                    "contentType": "application/json"
+                    "contentType": "none/none",
+                    "response": {
+                        "contentType": "application/json"
+                    }
                 }
             ],
             "safe": false,
             "idempotent": false,
             "input": {},
             "output": {
-                "type": "object",
-                "required": [
-                    "error",
-                    "result"
-                ],
-                "properties": {
-                    "result": {
-                        "type": "integer",
-                        "const": 1
-                    },
-                    "error": {
+                "oneOf": [
+                    {
                         "type": "object",
                         "required": [
-                            "type",
-                            "message"
+                            "error",
+                            "result"
                         ],
                         "properties": {
-                            "type": {
-                                "type": "string",
-                                "enum": [
-                                    "CartAlarmAlreadyRaised",
-                                    "CartAlarmNotRaised"
-                                ]
+                            "result": {
+                                "type": "integer",
+                                "const": 1
                             },
-                            "message": {
-                                "type": "string"
+                            "error": {
+                                "type": "null"
+                            }
+                        }
+                    },
+                    {
+                        "type": "object",
+                        "required": [
+                            "error",
+                            "result"
+                        ],
+                        "properties": {
+                            "result": {
+                                "type": "null"
+                            },
+                            "error": {
+                                "type": "object",
+                                "required": [
+                                    "type",
+                                    "message"
+                                ],
+                                "properties": {
+                                    "type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "CartAlarmAlreadyRaised",
+                                            "CartAlarmNotRaised"
+                                        ]
+                                    },
+                                    "message": {
+                                        "type": "string"
+                                    }
+                                }
                             }
                         }
                     }
-                }
+                ]
             }
         },
         "associate": {
@@ -156,7 +176,10 @@
                         "invokeaction"
                     ],
                     "href": "/messages/inbox/associate",
-                    "contentType": "application/json"
+                    "contentType": "application/json",
+                    "response": {
+                        "contentType": "application/json"
+                    }
                 }
             ],
             "safe": false,
@@ -174,35 +197,55 @@
                 }
             },
             "output": {
-                "type": "object",
-                "required": [
-                    "error",
-                    "result"
-                ],
-                "properties": {
-                    "result": {
-                        "type": "integer",
-                        "const": 1
-                    },
-                    "error": {
+                "oneOf": [
+                    {
                         "type": "object",
                         "required": [
-                            "type",
-                            "message"
+                            "error",
+                            "result"
                         ],
                         "properties": {
-                            "type": {
-                                "type": "string",
-                                "enum": [
-                                    "AlreadyAssociated"
-                                ]
+                            "result": {
+                                "type": "integer",
+                                "const": 1
                             },
-                            "message": {
-                                "type": "string"
+                            "error": {
+                                "type": "null"
+                            }
+                        }
+                    },
+                    {
+                        "type": "object",
+                        "required": [
+                            "error",
+                            "result"
+                        ],
+                        "properties": {
+                            "result": {
+                                "type": "null"
+                            },
+                            "error": {
+                                "type": "object",
+                                "required": [
+                                    "type",
+                                    "message"
+                                ],
+                                "properties": {
+                                    "type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "CartAlarmAlreadyRaised",
+                                            "CartAlarmNotRaised"
+                                        ]
+                                    },
+                                    "message": {
+                                        "type": "string"
+                                    }
+                                }
                             }
                         }
                     }
-                }
+                ]
             }
         },
         "lock": {
@@ -214,42 +257,65 @@
                         "invokeaction"
                     ],
                     "href": "/messages/inbox/lock",
-                    "contentType": "application/json"
+                    "contentType": "none/none",
+                    "response": {
+                        "contentType": "application/json"
+                    }
                 }
             ],
             "safe": false,
             "idempotent": false,
             "input": {},
             "output": {
-                "type": "object",
-                "required": [
-                    "error",
-                    "result"
-                ],
-                "properties": {
-                    "result": {
-                        "type": "integer",
-                        "const": 1
-                    },
-                    "error": {
+                "oneOf": [
+                    {
                         "type": "object",
                         "required": [
-                            "type",
-                            "message"
+                            "error",
+                            "result"
                         ],
                         "properties": {
-                            "type": {
-                                "type": "string",
-                                "enum": [
-                                    "CartAlreadyLocked"
-                                ]
+                            "result": {
+                                "type": "integer",
+                                "const": 1
                             },
-                            "message": {
-                                "type": "string"
+                            "error": {
+                                "type": "null"
+                            }
+                        }
+                    },
+                    {
+                        "type": "object",
+                        "required": [
+                            "error",
+                            "result"
+                        ],
+                        "properties": {
+                            "result": {
+                                "type": "null"
+                            },
+                            "error": {
+                                "type": "object",
+                                "required": [
+                                    "type",
+                                    "message"
+                                ],
+                                "properties": {
+                                    "type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "CartAlarmAlreadyRaised",
+                                            "CartAlarmNotRaised"
+                                        ]
+                                    },
+                                    "message": {
+                                        "type": "string"
+                                    }
+                                }
                             }
                         }
                     }
-                }
+                ]
             }
         },
         "unlock": {
@@ -261,42 +327,65 @@
                         "invokeaction"
                     ],
                     "href": "/messages/inbox/unlock",
-                    "contentType": "application/json"
+                    "contentType": "none/none",
+                    "response": {
+                        "contentType": "application/json"
+                    }
                 }
             ],
             "safe": false,
             "idempotent": false,
             "input": {},
             "output": {
-                "type": "object",
-                "required": [
-                    "error",
-                    "result"
-                ],
-                "properties": {
-                    "result": {
-                        "type": "integer",
-                        "const": 1
-                    },
-                    "error": {
+                "oneOf": [
+                    {
                         "type": "object",
                         "required": [
-                            "type",
-                            "message"
+                            "error",
+                            "result"
                         ],
                         "properties": {
-                            "type": {
-                                "type": "string",
-                                "enum": [
-                                    "CartAlreadyUnlocked"
-                                ]
+                            "result": {
+                                "type": "integer",
+                                "const": 1
                             },
-                            "message": {
-                                "type": "string"
+                            "error": {
+                                "type": "null"
+                            }
+                        }
+                    },
+                    {
+                        "type": "object",
+                        "required": [
+                            "error",
+                            "result"
+                        ],
+                        "properties": {
+                            "result": {
+                                "type": "null"
+                            },
+                            "error": {
+                                "type": "object",
+                                "required": [
+                                    "type",
+                                    "message"
+                                ],
+                                "properties": {
+                                    "type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "CartAlarmAlreadyRaised",
+                                            "CartAlarmNotRaised"
+                                        ]
+                                    },
+                                    "message": {
+                                        "type": "string"
+                                    }
+                                }
                             }
                         }
                     }
-                }
+                ]
             }
         }
     },
@@ -316,20 +405,10 @@
             "data": {
                 "type": "object",
                 "required": [
-                    "customer",
-                    "store",
                     "catalogItem",
                     "itemId"
                 ],
                 "properties": {
-                    "customer": {
-                        "type": "string",
-                        "format": "email"
-                    },
-                    "store": {
-                        "type": "integer",
-                        "minimum": 0
-                    },
                     "catalogItem": {
                         "type": "integer",
                         "minimum": 0
@@ -349,8 +428,7 @@
                     "op": [
                         "subscribeevent"
                     ],
-                    "href": "/messages/outbox/cartMoved",
-                    "contentType": "application/json"
+                    "href": "/messages/outbox/cartMoved"
                 }
             ],
             "data": {}
