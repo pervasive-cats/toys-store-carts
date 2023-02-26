@@ -2,8 +2,7 @@
     "@context": "https://www.w3.org/2019/wot/td/v1",
     "title": "Cart",
     "@type": "tm:ThingModel",
-    "id": "io.github.pervasivecats:cart",
-    "base": "http://localhost/",
+    "base": "http://localhost:8080/api/2/things/io.github.pervasivecats:cart-{id}-{store}",
     "description": "A smart cart that can be used by customers for adding products to their own digital cart.",
     "securityDefinitions": {
         "nosec_sc": {
@@ -11,6 +10,20 @@
         }
     },
     "security": "nosec_sc",
+    "uriVariables": {
+        "id": {
+            "title": "id",
+            "description": "The id of the cart in its store.",
+            "type": "integer",
+            "minimum": 0
+        },
+        "store": {
+            "title": "store",
+            "description": "The store in which the cart is placed.",
+            "type": "integer",
+            "minimum": 0
+        }
+    },
     "properties": {
         "id": {
             "title": "id",
@@ -24,7 +37,7 @@
                     "op": [
                         "readproperty"
                     ],
-                    "href": "cart/properties/id",
+                    "href": "/attributes/id",
                     "contentType": "application/json"
                 }
             ]
@@ -41,7 +54,7 @@
                     "op": [
                         "readproperty"
                     ],
-                    "href": "cart/properties/store",
+                    "href": "/attributes/store",
                     "contentType": "application/json"
                 }
             ]
@@ -57,7 +70,7 @@
                     "op": [
                         "readproperty"
                     ],
-                    "href": "cart/properties/movable"
+                    "href": "/attributes/movable"
                 }
             ]
         },
@@ -80,7 +93,7 @@
                     "op": [
                         "readproperty"
                     ],
-                    "href": "cart/properties/customer"
+                    "href": "/attributes/customer"
                 }
             ]
         }
@@ -94,7 +107,7 @@
                     "op": [
                         "invokeaction"
                     ],
-                    "href": "cart/actions/raiseAlarm",
+                    "href": "/messages/inbox/raiseAlarm",
                     "contentType": "application/json"
                 }
             ],
@@ -142,7 +155,7 @@
                     "op": [
                         "invokeaction"
                     ],
-                    "href": "cart/actions/associate",
+                    "href": "/messages/inbox/associate",
                     "contentType": "application/json"
                 }
             ],
@@ -200,7 +213,7 @@
                     "op": [
                         "invokeaction"
                     ],
-                    "href": "cart/actions/lock",
+                    "href": "/messages/inbox/lock",
                     "contentType": "application/json"
                 }
             ],
@@ -247,7 +260,7 @@
                     "op": [
                         "invokeaction"
                     ],
-                    "href": "cart/actions/unlock",
+                    "href": "/messages/inbox/unlock",
                     "contentType": "application/json"
                 }
             ],
@@ -296,7 +309,7 @@
                     "op": [
                         "subscribeevent"
                     ],
-                    "href": "cart/events/itemInsertedIntoCart",
+                    "href": "/messages/outbox/itemInsertedIntoCart",
                     "contentType": "application/json"
                 }
             ],
@@ -336,7 +349,7 @@
                     "op": [
                         "subscribeevent"
                     ],
-                    "href": "cart/events/cartMoved",
+                    "href": "/messages/outbox/cartMoved",
                     "contentType": "application/json"
                 }
             ],
