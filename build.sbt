@@ -56,5 +56,9 @@ lazy val root = project
       )
     ),
     assembly / assemblyJarName := "main.jar",
-    assembly / mainClass := Some("io.github.pervasivecats.Main"),
+    assembly / mainClass := Some("io.github.pervasivecats.main"),
+    assembly / assemblyMergeStrategy := {
+      case PathList("io", "getquill", _*) => MergeStrategy.first
+      case v => MergeStrategy.defaultMergeStrategy(v)
+    }
   )
