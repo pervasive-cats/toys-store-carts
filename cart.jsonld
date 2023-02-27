@@ -2,7 +2,7 @@
     "@context": "https://www.w3.org/2019/wot/td/v1",
     "title": "Cart",
     "@type": "tm:ThingModel",
-    "base": "http://localhost:8080/api/2/things/io.github.pervasivecats:cart-{id}-{store}",
+    "base": "http://localhost:8080/api/2/things",
     "description": "A smart cart that can be used by customers for adding products to their own digital cart.",
     "securityDefinitions": {
         "nosec_sc": {
@@ -37,7 +37,7 @@
                     "op": [
                         "readproperty"
                     ],
-                    "href": "/attributes/id"
+                    "href": "/io.github.pervasivecats:cart-{id}-{store}/attributes/id"
                 }
             ]
         },
@@ -53,7 +53,7 @@
                     "op": [
                         "readproperty"
                     ],
-                    "href": "/attributes/store"
+                    "href": "/io.github.pervasivecats:cart-{id}-{store}/attributes/store"
                 }
             ]
         },
@@ -68,7 +68,7 @@
                     "op": [
                         "readproperty"
                     ],
-                    "href": "/attributes/movable"
+                    "href": "/io.github.pervasivecats:cart-{id}-{store}/attributes/movable"
                 }
             ]
         },
@@ -91,7 +91,7 @@
                     "op": [
                         "readproperty"
                     ],
-                    "href": "/attributes/customer"
+                    "href": "/io.github.pervasivecats:cart-{id}-{store}/attributes/customer"
                 }
             ]
         }
@@ -105,7 +105,7 @@
                     "op": [
                         "invokeaction"
                     ],
-                    "href": "/messages/inbox/raiseAlarm",
+                    "href": "/io.github.pervasivecats:cart-{id}-{store}/messages/inbox/raiseAlarm",
                     "contentType": "none/none",
                     "response": {
                         "contentType": "application/json"
@@ -154,7 +154,7 @@
                                         "type": "string",
                                         "enum": [
                                             "CartAlarmAlreadyRaised",
-                                            "CartAlarmNotRaised"
+                                            "CartAlarmRaisingFailed"
                                         ]
                                     },
                                     "message": {
@@ -175,7 +175,7 @@
                     "op": [
                         "invokeaction"
                     ],
-                    "href": "/messages/inbox/associate",
+                    "href": "/io.github.pervasivecats:cart-{id}-{store}/messages/inbox/associate",
                     "contentType": "application/json",
                     "response": {
                         "contentType": "application/json"
@@ -234,8 +234,9 @@
                                     "type": {
                                         "type": "string",
                                         "enum": [
-                                            "CartAlarmAlreadyRaised",
-                                            "CartAlarmNotRaised"
+                                            "WrongEmailFormat",
+                                            "CartAlreadyAssociated"
+                                            "CartAssociationFailed"
                                         ]
                                     },
                                     "message": {
@@ -256,7 +257,7 @@
                     "op": [
                         "invokeaction"
                     ],
-                    "href": "/messages/inbox/lock",
+                    "href": "/io.github.pervasivecats:cart-{id}-{store}/messages/inbox/lock",
                     "contentType": "none/none",
                     "response": {
                         "contentType": "application/json"
@@ -304,8 +305,8 @@
                                     "type": {
                                         "type": "string",
                                         "enum": [
-                                            "CartAlarmAlreadyRaised",
-                                            "CartAlarmNotRaised"
+                                            "CartAlreadyLocked",
+                                            "CartLockingFailed"
                                         ]
                                     },
                                     "message": {
@@ -326,7 +327,7 @@
                     "op": [
                         "invokeaction"
                     ],
-                    "href": "/messages/inbox/unlock",
+                    "href": "/io.github.pervasivecats:cart-{id}-{store}/messages/inbox/unlock",
                     "contentType": "none/none",
                     "response": {
                         "contentType": "application/json"
@@ -374,8 +375,8 @@
                                     "type": {
                                         "type": "string",
                                         "enum": [
-                                            "CartAlarmAlreadyRaised",
-                                            "CartAlarmNotRaised"
+                                            "CartAlreadyUnlocked",
+                                            "CartUnlockingFailed"
                                         ]
                                     },
                                     "message": {
@@ -398,7 +399,7 @@
                     "op": [
                         "subscribeevent"
                     ],
-                    "href": "/messages/outbox/itemInsertedIntoCart",
+                    "href": "/io.github.pervasivecats:cart-{id}-{store}/messages/outbox/itemInsertedIntoCart",
                     "contentType": "application/json"
                 }
             ],
@@ -428,7 +429,7 @@
                     "op": [
                         "subscribeevent"
                     ],
-                    "href": "/messages/outbox/cartMoved"
+                    "href": "/io.github.pervasivecats:cart-{id}-{store}/messages/outbox/cartMoved"
                 }
             ],
             "data": {}
