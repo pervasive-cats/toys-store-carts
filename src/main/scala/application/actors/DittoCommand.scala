@@ -8,15 +8,16 @@ package io.github.pervasivecats
 package application.actors
 
 import akka.actor.typed.ActorRef
-
 import carts.cart.valueobjects.{CartId, Customer, Store}
 import carts.cart.valueobjects.item.{CatalogItem, ItemId}
+
+import org.eclipse.ditto.client.DittoClient
 
 sealed trait DittoCommand
 
 object DittoCommand {
 
-  case object WebsocketConnected extends DittoCommand
+  final case class DittoClientConnected(client: DittoClient) extends DittoCommand
 
   case object DittoMessagesIncoming extends DittoCommand
 

@@ -7,47 +7,6 @@
 package io.github.pervasivecats
 package application.actors
 
-import java.util.concurrent.ForkJoinPool
-import java.util.regex.Pattern
-
-import scala.concurrent.*
-import scala.concurrent.duration.DurationInt
-import scala.util.Failure
-import scala.util.Success
-import scala.util.matching.Regex
-
-import akka.Done
-import akka.NotUsed
-import akka.actor.ActorRef as UntypedActorRef
-import akka.actor.ActorSystem
-import akka.actor.typed.ActorRef
-import akka.actor.typed.Behavior
-import akka.actor.typed.scaladsl.ActorContext
-import akka.actor.typed.scaladsl.Behaviors
-import akka.http.scaladsl.Http
-import akka.http.scaladsl.HttpExt
-import akka.http.scaladsl.client.RequestBuilding.Delete
-import akka.http.scaladsl.client.RequestBuilding.Post
-import akka.http.scaladsl.client.RequestBuilding.Put
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import akka.http.scaladsl.model.*
-import akka.http.scaladsl.model.headers.Authorization
-import akka.http.scaladsl.model.headers.BasicHttpCredentials
-import akka.http.scaladsl.model.ws.*
-import akka.stream.CompletionStrategy
-import akka.stream.OverflowStrategy
-import akka.stream.scaladsl.Flow
-import akka.stream.scaladsl.Keep
-import akka.stream.scaladsl.Sink
-import akka.stream.scaladsl.Source
-import com.typesafe.config.Config
-import spray.json.JsNumber
-import spray.json.JsObject
-import spray.json.JsString
-import spray.json.JsValue
-import spray.json.enrichAny
-import spray.json.enrichString
-
 import application.actors.DittoCommand.*
 import application.actors.RootCommand.Startup
 import application.Serializers.given
@@ -57,7 +16,38 @@ import carts.cart.valueobjects.{CartId, Store}
 import carts.cart.valueobjects.item.{CatalogItem, ItemId}
 import carts.cart.Repository
 import AnyOps.===
+import application.routes.entities.Entity.{ErrorResponseEntity, ResultResponseEntity}
 import carts.cart.Repository.CartNotFound
+
+import akka.actor.typed.{ActorRef, Behavior}
+import akka.actor.typed.scaladsl.Behaviors
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import com.typesafe.config.Config
+import org.eclipse.ditto.base.model.common.HttpStatus
+import org.eclipse.ditto.client.{DittoClient, DittoClients}
+import org.eclipse.ditto.client.configuration.*
+import org.eclipse.ditto.client.live.commands.LiveCommandHandler
+import org.eclipse.ditto.client.live.messages.{MessageSender, RepliableMessage}
+import org.eclipse.ditto.client.messaging.{AuthenticationProviders, MessagingProviders}
+import org.eclipse.ditto.client.options.Options
+import org.eclipse.ditto.messages.model.Message as DittoMessage
+import org.eclipse.ditto.messages.model.MessageDirection
+import org.eclipse.ditto.things.model.*
+import spray.json.{enrichAny, enrichString, JsNumber, JsObject, JsValue}
+
+import java.net.http.HttpHeaders
+import java.util.concurrent.{CompletionException, ForkJoinPool}
+import java.util.function.{BiConsumer, BiFunction}
+import java.util.regex.Pattern
+import scala.concurrent.*
+import scala.concurrent.duration.DurationInt
+import scala.util.{Failure, Success}
+import scala.util.matching.Regex
+import scala.jdk.OptionConverters.RichOptional
+import eu.timepit.refined.auto.autoUnwrap
+import org.eclipse.ditto.json.JsonObject
+import org.eclipse.ditto.policies.model.PolicyId
+import org.eclipse.ditto.things.model.signals.commands.exceptions.ThingNotAccessibleException
 
 object DittoActor extends SprayJsonSupport {
 
@@ -66,68 +56,86 @@ object DittoActor extends SprayJsonSupport {
     override val message: String = "An error with the Ditto service was encountered."
   }
 
-  private def handleResponse(
-    response: Future[HttpResponse],
-    replyTo: ActorRef[Validated[Unit]],
-    executionContext: ExecutionContext
-  ): Behavior[DittoCommand] = {
-    response
-      .onComplete {
-        case Failure(_) => replyTo ! Left[ValidationError, Unit](DittoError)
-        case Success(response) =>
-          response.status match {
-            case StatusCodes.OK | StatusCodes.Created | StatusCodes.Accepted | StatusCodes.NoContent =>
-              replyTo ! Right[ValidationError, Unit](())
-            case StatusCodes.NotFound => replyTo ! Left[ValidationError, Unit](CartNotFound)
-            case _ => replyTo ! Left[ValidationError, Unit](DittoError)
-          }
-      }(executionContext)
-    Behaviors.same[DittoCommand]
+  private def sendReply(
+    message: RepliableMessage[String, String],
+    correlationId: String,
+    status: HttpStatus,
+    payload: Option[String]
+  ): Unit = {
+    val msg: MessageSender.SetPayloadOrSend[String] = message.reply().httpStatus(status).correlationId(correlationId)
+    payload match {
+      case Some(p) => msg.payload(p)
+      case None => ()
+    }
+    msg.send()
   }
 
-  private def uri(hostName: String, port: String, namespace: String, cartId: CartId, store: Store): String =
-    s"http://$hostName:$port/api/2/things/$namespace:cart-${cartId.value}-${store.value}"
+  @SuppressWarnings(Array("org.wartremover.warts.Null"))
+  private def responseHandler[T]: ActorRef[Validated[Unit]] => BiConsumer[T, Throwable] =
+    r =>
+      (_, t) =>
+        if (t === null)
+          r ! Right[ValidationError, Unit](())
+        else
+          t.getCause match {
+            case e: ThingNotAccessibleException if e.getHttpStatus === HttpStatus.NOT_FOUND =>
+              r ! Left[ValidationError, Unit](CartNotFound)
+            case _ => r ! Left[ValidationError, Unit](DittoError)
+          }
 
-  private case class DittoData(
-    direction: String,
-    messageSubject: String,
+  private def sendMessage(
+    client: DittoClient,
+    namespace: String,
     cartId: CartId,
     store: Store,
-    payload: Seq[(String, JsValue)]
-  )
-
-  private def parseDittoProtocol(namespace: String, message: String): Option[DittoData] = {
-    val thingIdMatcher: Regex = (Pattern.quote(namespace) + ":cart-(?<cartId>[0-9]+)-(?<store>[0-9]+)").r
-    message.parseJson.asJsObject.getFields("headers", "value") match {
-      case Seq(headers, value) =>
-        headers
-          .asJsObject
-          .getFields("ditto-message-direction", "ditto-message-subject", "ditto-message-thing-id") match {
-            case Seq(JsString(direction), JsString(messageSubject), JsString(thingIdMatcher(cartId, store)))
-                 if cartId.toLongOption.isDefined && store.toLongOption.isDefined =>
-              (for {
-                c <- CartId(cartId.toLong)
-                s <- Store(store.toLong)
-              } yield Some(DittoData(direction, messageSubject, c, s, value.asJsObject.fields.toSeq.sortBy(_._1))))
-                .getOrElse(None)
-            case _ => None
-          }
-      case Seq(headers) =>
-        headers
-          .asJsObject
-          .getFields("ditto-message-direction", "ditto-message-subject", "ditto-message-thing-id") match {
-            case Seq(JsString(direction), JsString(messageSubject), JsString(thingIdMatcher(cartId, store)))
-                 if cartId.toLongOption.isDefined && store.toLongOption.isDefined =>
-              (for {
-                c <- CartId(cartId.toLong)
-                s <- Store(store.toLong)
-              } yield Some(DittoData(direction, messageSubject, c, s, Seq.empty))).getOrElse(None)
-            case _ => None
-          }
-      case _ => None
+    subject: String,
+    payload: Option[JsonObject],
+    replyTo: Option[ActorRef[Validated[Unit]]]
+  ): Unit = {
+    val message: MessageSender.SetPayloadOrSend[JsonObject] =
+      client
+        .live()
+        .forId(ThingId.of(s"$namespace:cart-${cartId.value}-${store.value}"))
+        .message()
+        .to()
+        .subject(subject)
+    (payload, replyTo) match {
+      case (Some(p), Some(r)) => message.payload(p).send(classOf[String], responseHandler(r))
+      case (None, Some(r)) => message.send(classOf[String], responseHandler(r))
+      case (Some(p), None) => message.payload(p).send()
+      case _ => message.send()
     }
   }
 
+  private def handleMessage(
+    message: RepliableMessage[String, String],
+    messageHandler: (RepliableMessage[String, String], CartId, Store, String, Seq[JsValue]) => Unit,
+    payloadFields: String*
+  ): Unit = {
+    val thingIdMatcher: Regex = "cart-(?<cartId>[0-9]+)-(?<store>[0-9]+)".r
+    (message.getDirection, message.getEntityId.getName, message.getCorrelationId.toScala) match {
+      case (MessageDirection.FROM, thingIdMatcher(cartId, store), Some(correlationId))
+           if cartId.toLongOption.isDefined && store.toLongOption.isDefined =>
+        (for {
+          c <- CartId(cartId.toLong)
+          s <- Store(store.toLong)
+        } yield (c, s)).fold(
+          error =>
+            sendReply(message, correlationId, HttpStatus.BAD_REQUEST, Some(ErrorResponseEntity(error).toJson.compactPrint)),
+          (c, s) =>
+            messageHandler(
+              message,
+              c,
+              s,
+              correlationId,
+              message.getPayload.toScala.map(_.parseJson.asJsObject.getFields(payloadFields: _*)).getOrElse(Seq.empty[JsValue])
+            )
+        )
+      case _ => ()
+    }
+  }
+
+  @SuppressWarnings(Array("org.wartremover.warts.Null"))
   def apply(
     root: ActorRef[RootCommand],
     messageBrokerActor: ActorRef[MessageBrokerCommand],
@@ -135,74 +143,105 @@ object DittoActor extends SprayJsonSupport {
     dittoConfig: Config
   ): Behavior[DittoCommand] =
     Behaviors.setup[DittoCommand] { ctx =>
-      val client: HttpExt = Http()(ctx.system.classicSystem)
-      given ActorSystem = ctx.system.classicSystem
-      val (websocket, response): (UntypedActorRef, Future[WebSocketUpgradeResponse]) =
-        Source
-          .actorRef[Message](
-            { case m: TextMessage.Strict if m.text === "SUCCESS" => CompletionStrategy.draining },
-            { case m: TextMessage.Strict if m.text === "ERROR" => IllegalStateException() },
-            bufferSize = 1,
-            OverflowStrategy.dropTail
+      val disconnectedDittoClient = DittoClients.newInstance(
+        MessagingProviders.webSocket(
+          WebSocketMessagingConfiguration
+            .newBuilder
+            .endpoint(s"ws://${dittoConfig.getString("hostName")}:${dittoConfig.getString("portNumber")}/ws/2")
+            .connectionErrorHandler(_ => root ! Startup(success = false))
+            .build,
+          AuthenticationProviders.basic(
+            BasicAuthenticationConfiguration
+              .newBuilder
+              .username(dittoConfig.getString("username"))
+              .password(dittoConfig.getString("password"))
+              .build
           )
-          .viaMat(
-            client.webSocketClientFlow(
-              WebSocketRequest(
-                s"ws://${dittoConfig.getString("hostName")}:${dittoConfig.getString("portNumber")}/ws/2",
-                extraHeaders =
-                  Seq(Authorization(BasicHttpCredentials(dittoConfig.getString("username"), dittoConfig.getString("password"))))
-              )
-            )
-          )(Keep.both)
-          .toMat(
-            Flow[Message]
-              .mapAsync(parallelism = 2) {
-                case t: TextMessage => t.toStrict(30.seconds)
-                case _ => Future.failed[TextMessage.Strict](IllegalArgumentException())
-              }
-              .mapConcat[DittoCommand](t =>
-                if (t.text === "START-SEND-MESSAGES:ACK") {
-                  DittoMessagesIncoming :: Nil
-                } else {
-                  parseDittoProtocol(dittoConfig.getString("namespace"), t.text) match {
-                    case Some(
-                           DittoData(
-                             "FROM",
-                             "itemInsertedIntoCart",
-                             cartId,
-                             store,
-                             Seq("catalogItem" -> JsNumber(catalogItem), "itemId" -> JsNumber(itemId))
-                           )
-                         ) if catalogItem.isValidLong && itemId.isValidLong =>
-                      (for {
-                        k <- CatalogItem(catalogItem.longValue)
-                        i <- ItemId(itemId.longValue)
-                      } yield ItemInsertedIntoCart(cartId, store, k, i) :: Nil).getOrElse(Nil)
-                    case Some(DittoData("FROM", "cartMoved", cartId, store, Seq())) =>
-                      CartMoved(cartId, store) :: Nil
-                    case _ => Nil
-                  }
-                }
-              )
-              .to(Sink.foreach(ctx.self ! _))
-          )(Keep.left)
-          .run()
-      given ExecutionContext = ExecutionContext.fromExecutor(ForkJoinPool.commonPool())
-      response
-        .onComplete {
-          case Failure(_) => root ! Startup(success = false)
-          case Success(r) =>
-            if (r.response.status === StatusCodes.SwitchingProtocols)
-              ctx.self ! WebsocketConnected
-            else
-              root ! Startup(success = false)
+        )
+      )
+      disconnectedDittoClient
+        .connect
+        .thenAccept(ctx.self ! DittoClientConnected(_))
+        .exceptionally { _ =>
+          disconnectedDittoClient.destroy()
+          root ! Startup(success = false)
+          null
         }
       Behaviors.receiveMessage {
-        case WebsocketConnected =>
-          websocket ! TextMessage("START-SEND-MESSAGES?namespaces=" + dittoConfig.getString("namespace"))
+        case DittoClientConnected(client) =>
+          client
+            .live
+            .startConsumption(
+              Options.Consumption.namespaces(dittoConfig.getString("namespace"))
+            )
+            .thenRun(() => ctx.self ! DittoMessagesIncoming)
+            .exceptionally { _ =>
+              disconnectedDittoClient.destroy()
+              root ! Startup(success = false)
+              null
+            }
           Behaviors.receiveMessage {
-            case DittoMessagesIncoming => onDittoMessagesIncoming(root, client, messageBrokerActor, repositoryConfig, dittoConfig)
-            case _ => Behaviors.unhandled
+            case DittoMessagesIncoming =>
+              client
+                .live
+                .registerForMessage[String, String](
+                  "ditto_actor_itemInsertedIntoCart",
+                  "itemInsertedIntoCart",
+                  classOf[String],
+                  (msg: RepliableMessage[String, String]) =>
+                    handleMessage(
+                      msg,
+                      (msg, cartId, store, correlationId, fields) =>
+                        fields match {
+                          case Seq(JsNumber(catalogItem), JsNumber(itemId)) if catalogItem.isValidLong && itemId.isValidLong =>
+                            (for {
+                              k <- CatalogItem(catalogItem.longValue)
+                              i <- ItemId(itemId.longValue)
+                            } yield ctx.self ! ItemInsertedIntoCart(cartId, store, k, i)).fold(
+                              e =>
+                                sendReply(
+                                  msg,
+                                  correlationId,
+                                  HttpStatus.BAD_REQUEST,
+                                  Some(ErrorResponseEntity(e).toJson.compactPrint)
+                                ),
+                              _ =>
+                                sendReply(msg, correlationId, HttpStatus.OK, Some(ResultResponseEntity(()).toJson.compactPrint))
+                            )
+                          case _ =>
+                            sendReply(
+                              msg,
+                              correlationId,
+                              HttpStatus.BAD_REQUEST,
+                              Some(ErrorResponseEntity(DittoError).toJson.compactPrint)
+                            )
+                        },
+                      "catalogItem",
+                      "itemId"
+                    )
+                )
+              client
+                .live
+                .registerForMessage(
+                  "ditto_actor_cartMoved",
+                  "cartMoved",
+                  classOf[String],
+                  (msg: RepliableMessage[String, String]) =>
+                    handleMessage(
+                      msg,
+                      (msg, cartId, store, correlationId, _) => {
+                        ctx.self ! CartMoved(cartId, store)
+                        sendReply(
+                          msg,
+                          correlationId,
+                          HttpStatus.OK,
+                          Some(ResultResponseEntity(()).toJson.compactPrint)
+                        )
+                      }
+                    )
+                )
+              onDittoMessagesIncoming(root, client, messageBrokerActor, repositoryConfig, dittoConfig)
+            case _ => Behaviors.unhandled[DittoCommand]
           }
         case _ => Behaviors.unhandled[DittoCommand]
       }
@@ -210,14 +249,11 @@ object DittoActor extends SprayJsonSupport {
 
   private def onDittoMessagesIncoming(
     root: ActorRef[RootCommand],
-    client: HttpExt,
+    client: DittoClient,
     messageBrokerActor: ActorRef[MessageBrokerCommand],
     repositoryConfig: Config,
     dittoConfig: Config
-  )(
-    using
-    ExecutionContext
-  ): Behavior[DittoCommand] =
+  ): Behavior[DittoCommand] = {
     root ! Startup(success = true)
     Behaviors.receive { (ctx, msg) =>
       val itemInsertionHandlers: ItemInsertionHandlers = ItemInsertionHandlers(messageBrokerActor, ctx.self)
@@ -225,144 +261,79 @@ object DittoActor extends SprayJsonSupport {
       given Repository = Repository(repositoryConfig)
       msg match {
         case AddCart(cartId, store, replyTo) =>
-          handleResponse(
-            client
-              .singleRequest(
-                Put(
-                  uri(
-                    dittoConfig.getString("hostName"),
-                    dittoConfig.getString("portNumber"),
-                    dittoConfig.getString("namespace"),
-                    cartId,
-                    store
-                  ),
-                  JsObject(
-                    "definition" -> dittoConfig.getString("thingModel").toJson,
-                    "attributes" -> JsObject(
-                      "id" -> cartId.toJson,
-                      "store" -> store.toJson,
-                      "movable" -> false.toJson
-                    )
-                  )
-                ).addHeader(
-                  Authorization(BasicHttpCredentials(dittoConfig.getString("username"), dittoConfig.getString("password")))
-                )
-              ),
-            replyTo,
-            ctx.executionContext
-          )
-        case RemoveCart(cartId, store, replyTo) =>
-          handleResponse(
-            client
-              .singleRequest(
-                Delete(
-                  uri(
-                    dittoConfig.getString("hostName"),
-                    dittoConfig.getString("portNumber"),
-                    dittoConfig.getString("namespace"),
-                    cartId,
-                    store
-                  )
-                )
-                  .addHeader(
-                    Authorization(BasicHttpCredentials(dittoConfig.getString("username"), dittoConfig.getString("password")))
-                  )
-              )
-              .flatMap(r =>
-                r.status match {
-                  case StatusCodes.NoContent =>
-                    client.singleRequest(
-                      Delete(
-                        s"http://${dittoConfig.getString("hostName")}:${dittoConfig.getString("portNumber")}"
-                        + s"/api/2/policies/${dittoConfig.getString("namespace")}:cart-${cartId.value}-${store.value}"
-                      ).addHeader(
-                        Authorization(BasicHttpCredentials(dittoConfig.getString("username"), dittoConfig.getString("password")))
-                      )
-                    )
-                  case _ => Future.successful(r)
-                }
-              ),
-            replyTo,
-            ctx.executionContext
-          )
-        case RaiseCartAlarm(cartId, store) =>
           client
-            .singleRequest(
-              Post(
-                uri(
-                  dittoConfig.getString("hostName"),
-                  dittoConfig.getString("portNumber"),
-                  dittoConfig.getString("namespace"),
-                  cartId,
-                  store
-                ) + "/inbox/messages/raiseAlarm"
-              )
-                .addHeader(
-                  Authorization(BasicHttpCredentials(dittoConfig.getString("username"), dittoConfig.getString("password")))
+            .twin()
+            .create(
+              JsonObject
+                .newBuilder
+                .set("thingId", s"${dittoConfig.getString("namespace")}:cart-${cartId.value}-${store.value}")
+                .set("definition", dittoConfig.getString("thingModel"))
+                .set(
+                  "attributes",
+                  JsonObject
+                    .newBuilder
+                    .set("id", cartId.value: Long)
+                    .set("store", store.value: Long)
+                    .set("movable", false)
+                    .build
                 )
+                .build
             )
+            .whenComplete(responseHandler(replyTo))
+          Behaviors.same[DittoCommand]
+        case RemoveCart(cartId, store, replyTo) =>
+          client
+            .twin()
+            .delete(ThingId.of(dittoConfig.getString("namespace"), s"cart-${cartId.value}-${store.value}"))
+            .thenCompose(_ =>
+              client.policies().delete(PolicyId.of(dittoConfig.getString("namespace"), s"cart-${cartId.value}-${store.value}"))
+            )
+            .whenComplete(responseHandler(replyTo))
+          Behaviors.same[DittoCommand]
+        case RaiseCartAlarm(cartId, store) =>
+          sendMessage(
+            client,
+            dittoConfig.getString("namespace"),
+            cartId,
+            store,
+            "raiseAlarm",
+            None,
+            None
+          )
           Behaviors.same[DittoCommand]
         case AssociateCart(cartId, store, customer, replyTo) =>
-          handleResponse(
-            client
-              .singleRequest(
-                Post(
-                  uri(
-                    dittoConfig.getString("hostName"),
-                    dittoConfig.getString("portNumber"),
-                    dittoConfig.getString("namespace"),
-                    cartId,
-                    store
-                  ) + "/inbox/messages/associate",
-                  JsObject("customer" -> customer.toJson)
-                )
-                  .addHeader(
-                    Authorization(BasicHttpCredentials(dittoConfig.getString("username"), dittoConfig.getString("password")))
-                  )
-              ),
-            replyTo,
-            ctx.executionContext
+          sendMessage(
+            client,
+            dittoConfig.getString("namespace"),
+            cartId,
+            store,
+            "associate",
+            Some(JsonObject.of(JsObject("customer" -> customer.toJson).compactPrint)),
+            Some(replyTo)
           )
+          Behaviors.same[DittoCommand]
         case UnlockCart(cartId, store, replyTo) =>
-          handleResponse(
-            client
-              .singleRequest(
-                Post(
-                  uri(
-                    dittoConfig.getString("hostName"),
-                    dittoConfig.getString("portNumber"),
-                    dittoConfig.getString("namespace"),
-                    cartId,
-                    store
-                  ) + "/inbox/messages/unlock"
-                )
-                  .addHeader(
-                    Authorization(BasicHttpCredentials(dittoConfig.getString("username"), dittoConfig.getString("password")))
-                  )
-              ),
-            replyTo,
-            ctx.executionContext
+          sendMessage(
+            client,
+            dittoConfig.getString("namespace"),
+            cartId,
+            store,
+            "unlock",
+            None,
+            Some(replyTo)
           )
+          Behaviors.same[DittoCommand]
         case LockCart(cartId, store, replyTo) =>
-          handleResponse(
-            client
-              .singleRequest(
-                Post(
-                  uri(
-                    dittoConfig.getString("hostName"),
-                    dittoConfig.getString("portNumber"),
-                    dittoConfig.getString("namespace"),
-                    cartId,
-                    store
-                  ) + "/inbox/messages/lock"
-                )
-                  .addHeader(
-                    Authorization(BasicHttpCredentials(dittoConfig.getString("username"), dittoConfig.getString("password")))
-                  )
-              ),
-            replyTo,
-            ctx.executionContext
+          sendMessage(
+            client,
+            dittoConfig.getString("namespace"),
+            cartId,
+            store,
+            "lock",
+            None,
+            Some(replyTo)
           )
+          Behaviors.same[DittoCommand]
         case ItemInsertedIntoCart(cartId, store, catalogItem, itemId) =>
           itemInsertionHandlers.onItemInsertedIntoCart(ItemInsertedIntoCartEvent(cartId, store, catalogItem, itemId))
           Behaviors.same[DittoCommand]
@@ -372,4 +343,5 @@ object DittoActor extends SprayJsonSupport {
         case _ => Behaviors.unhandled[DittoCommand]
       }
     }
+  }
 }
