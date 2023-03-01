@@ -8,10 +8,10 @@ package io.github.pervasivecats
 package application.actors
 
 import akka.actor.typed.ActorRef
+import org.eclipse.ditto.client.DittoClient
+
 import carts.cart.valueobjects.{CartId, Customer, Store}
 import carts.cart.valueobjects.item.{CatalogItem, ItemId}
-
-import org.eclipse.ditto.client.DittoClient
 
 sealed trait DittoCommand
 

@@ -7,6 +7,48 @@
 package io.github.pervasivecats
 package application.actors
 
+import java.net.http.HttpHeaders
+import java.util.concurrent.CompletionException
+import java.util.concurrent.ForkJoinPool
+import java.util.function.BiConsumer
+import java.util.function.BiFunction
+import java.util.regex.Pattern
+
+import scala.concurrent.*
+import scala.concurrent.duration.DurationInt
+import scala.jdk.OptionConverters.RichOptional
+import scala.util.Failure
+import scala.util.Success
+import scala.util.matching.Regex
+
+import akka.actor.typed.ActorRef
+import akka.actor.typed.Behavior
+import akka.actor.typed.scaladsl.Behaviors
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import com.typesafe.config.Config
+import eu.timepit.refined.auto.autoUnwrap
+import org.eclipse.ditto.base.model.common.HttpStatus
+import org.eclipse.ditto.client.DittoClient
+import org.eclipse.ditto.client.DittoClients
+import org.eclipse.ditto.client.configuration.*
+import org.eclipse.ditto.client.live.commands.LiveCommandHandler
+import org.eclipse.ditto.client.live.messages.MessageSender
+import org.eclipse.ditto.client.live.messages.RepliableMessage
+import org.eclipse.ditto.client.messaging.AuthenticationProviders
+import org.eclipse.ditto.client.messaging.MessagingProviders
+import org.eclipse.ditto.client.options.Options
+import org.eclipse.ditto.json.JsonObject
+import org.eclipse.ditto.messages.model.Message as DittoMessage
+import org.eclipse.ditto.messages.model.MessageDirection
+import org.eclipse.ditto.policies.model.PolicyId
+import org.eclipse.ditto.things.model.*
+import org.eclipse.ditto.things.model.signals.commands.exceptions.ThingNotAccessibleException
+import spray.json.JsNumber
+import spray.json.JsObject
+import spray.json.JsValue
+import spray.json.enrichAny
+import spray.json.enrichString
+
 import application.actors.DittoCommand.*
 import application.actors.RootCommand.Startup
 import application.Serializers.given
@@ -18,36 +60,6 @@ import carts.cart.Repository
 import AnyOps.===
 import application.routes.entities.Entity.{ErrorResponseEntity, ResultResponseEntity}
 import carts.cart.Repository.CartNotFound
-
-import akka.actor.typed.{ActorRef, Behavior}
-import akka.actor.typed.scaladsl.Behaviors
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import com.typesafe.config.Config
-import org.eclipse.ditto.base.model.common.HttpStatus
-import org.eclipse.ditto.client.{DittoClient, DittoClients}
-import org.eclipse.ditto.client.configuration.*
-import org.eclipse.ditto.client.live.commands.LiveCommandHandler
-import org.eclipse.ditto.client.live.messages.{MessageSender, RepliableMessage}
-import org.eclipse.ditto.client.messaging.{AuthenticationProviders, MessagingProviders}
-import org.eclipse.ditto.client.options.Options
-import org.eclipse.ditto.messages.model.Message as DittoMessage
-import org.eclipse.ditto.messages.model.MessageDirection
-import org.eclipse.ditto.things.model.*
-import spray.json.{enrichAny, enrichString, JsNumber, JsObject, JsValue}
-
-import java.net.http.HttpHeaders
-import java.util.concurrent.{CompletionException, ForkJoinPool}
-import java.util.function.{BiConsumer, BiFunction}
-import java.util.regex.Pattern
-import scala.concurrent.*
-import scala.concurrent.duration.DurationInt
-import scala.util.{Failure, Success}
-import scala.util.matching.Regex
-import scala.jdk.OptionConverters.RichOptional
-import eu.timepit.refined.auto.autoUnwrap
-import org.eclipse.ditto.json.JsonObject
-import org.eclipse.ditto.policies.model.PolicyId
-import org.eclipse.ditto.things.model.signals.commands.exceptions.ThingNotAccessibleException
 
 object DittoActor extends SprayJsonSupport {
 
@@ -70,7 +82,7 @@ object DittoActor extends SprayJsonSupport {
     msg.send()
   }
 
-  @SuppressWarnings(Array("org.wartremover.warts.Null"))
+  @SuppressWarnings(Array("org.wartremover.warts.Null", "scalafix:DisableSyntax.null"))
   private def responseHandler[T]: ActorRef[Validated[Unit]] => BiConsumer[T, Throwable] =
     r =>
       (_, t) =>
@@ -135,7 +147,7 @@ object DittoActor extends SprayJsonSupport {
     }
   }
 
-  @SuppressWarnings(Array("org.wartremover.warts.Null"))
+  @SuppressWarnings(Array("org.wartremover.warts.Null", "scalafix:DisableSyntax.null"))
   def apply(
     root: ActorRef[RootCommand],
     messageBrokerActor: ActorRef[MessageBrokerCommand],
