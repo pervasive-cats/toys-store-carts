@@ -40,7 +40,8 @@ lazy val root = project
       akkaTestKit,
       rabbitMQ,
       akkaStreamTestkit,
-      akkaHttpTestkit
+      akkaHttpTestkit,
+      ditto
     ),
     wartremoverErrors ++= Warts.allBut(Wart.ImplicitParameter),
     version := "1.0.0",
