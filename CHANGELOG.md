@@ -1,3 +1,11 @@
+## [1.0.1](https://github.com/pervasive-cats/toys-store-carts/compare/v1.0.0...v1.0.1) (2023-03-02)
+
+
+### Bug Fixes
+
+* change old implementation for new ditto client one ([52217df](https://github.com/pervasive-cats/toys-store-carts/commit/52217df86de4daba04e85676d3e96b641ce46f5d))
+* fix cart thing model error types and base URI ([d7d0a20](https://github.com/pervasive-cats/toys-store-carts/commit/d7d0a20e65f51424e01edb4bacde71e7140cccc0))
+
 # 1.0.0 (2023-02-26)
 
 
