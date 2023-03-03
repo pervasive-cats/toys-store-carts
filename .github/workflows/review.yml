@@ -26,7 +26,7 @@ jobs:
           name: coverage
           path: target/scala-3.2.2-RC2/scoverage-report
       - name: SonarCloud scan fixed
-        uses: pervasive-cats/sonarcloud-scoverage-fix@v1.0.0
+        uses: pervasive-cats/sonarcloud-scoverage-fix@v1.0.1
         with:
           scoverageReport: target/scala-3.2.2-RC2/scoverage-report/scoverage.xml
         env:
