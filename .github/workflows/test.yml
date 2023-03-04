@@ -41,7 +41,7 @@ jobs:
       - name: Check with scalafix
         run: sbt 'scalafixAll --check'
       - name: Test
-        run: sbt clean test coverageReport
+        run: sbt clean coverage test coverageReport
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
