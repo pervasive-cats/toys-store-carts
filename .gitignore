@@ -280,4 +280,8 @@ hs_err_pid*
 
 *.semanticdb
 
+application.conf
+
+!/src/test/resources/application.conf
+
 # End of https://www.toptal.com/developers/gitignore/api/scala,intellij,sbt,node
