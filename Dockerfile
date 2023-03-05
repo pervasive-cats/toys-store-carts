@@ -8,4 +8,4 @@ RUN curl -s https://api.github.com/repos/pervasive-cats/toys-store-carts/release
     | cut -d : -f 2,3  \
     | tr -d \"  \
     | wget -q -i - -O /opt/app/main.jar
-CMD ["java", "-jar", "/opt/app/main.jar", "application.conf"]
+CMD ["java", "-jar", "/opt/app/main.jar", "/opt/app/application.conf"]
