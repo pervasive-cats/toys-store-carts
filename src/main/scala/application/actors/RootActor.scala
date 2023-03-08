@@ -8,6 +8,7 @@ package io.github.pervasivecats
 package application.actors
 
 import java.util.concurrent.ForkJoinPool
+import javax.sql.DataSource
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
@@ -16,6 +17,8 @@ import akka.actor.typed.*
 import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.Http
 import com.typesafe.config.Config
+import com.zaxxer.hikari.HikariDataSource
+import io.getquill.JdbcContextConfig
 
 import application.actors.RootCommand.Startup
 import application.routes.Routes
@@ -30,16 +33,16 @@ object RootActor {
       )
       Behaviors.receiveMessage {
         case Startup(true) =>
-          val repositoryConfig: Config = config.getConfig("repository")
+          val dataSource: DataSource = JdbcContextConfig(config.getConfig("repository")).dataSource
           val dittoActor: ActorRef[DittoCommand] = ctx.spawn(
-            DittoActor(ctx.self, messageBrokerActor, repositoryConfig, config.getConfig("ditto")),
+            DittoActor(ctx.self, messageBrokerActor, dataSource, config.getConfig("ditto")),
             name = "ditto_actor"
           )
           val serverConfig: Config = config.getConfig("server")
           Behaviors.receiveMessage {
             case Startup(true) =>
               awaitServers(
-                ctx.spawn(CartServerActor(ctx.self, messageBrokerActor, dittoActor, repositoryConfig), name = "cart_server"),
+                ctx.spawn(CartServerActor(ctx.self, messageBrokerActor, dittoActor, dataSource), name = "cart_server"),
                 serverConfig,
                 count = 0
               )

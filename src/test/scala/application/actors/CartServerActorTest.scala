@@ -20,6 +20,7 @@ import com.dimafeng.testcontainers.PostgreSQLContainer
 import com.dimafeng.testcontainers.scalatest.TestContainerForAll
 import com.typesafe.config.*
 import eu.timepit.refined.auto.autoUnwrap
+import io.getquill.JdbcContextConfig
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.EitherValues.given
 import org.scalatest.OptionValues.given
@@ -79,10 +80,15 @@ class CartServerActorTest extends AnyFunSpec with TestContainerForAll with Befor
           rootActorProbe.ref,
           messageBrokerActorProbe.ref,
           dittoActorProbe.ref,
-          ConfigFactory
-            .load()
-            .getConfig("repository")
-            .withValue("dataSource.portNumber", ConfigValueFactory.fromAnyRef(containers.container.getFirstMappedPort.intValue()))
+          JdbcContextConfig(
+            ConfigFactory
+              .load()
+              .getConfig("repository")
+              .withValue(
+                "dataSource.portNumber",
+                ConfigValueFactory.fromAnyRef(containers.container.getFirstMappedPort.intValue())
+              )
+          ).dataSource
         )
       )
     )

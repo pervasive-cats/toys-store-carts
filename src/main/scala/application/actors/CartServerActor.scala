@@ -8,6 +8,7 @@ package io.github.pervasivecats
 package application.actors
 
 import java.util.concurrent.ForkJoinPool
+import javax.sql.DataSource
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
@@ -32,8 +33,8 @@ import application.actors.MessageBrokerCommand.CartAssociated
 import application.actors.DittoCommand.{
   AddCart as DittoAddCart,
   AssociateCart as DittoAssociateCart,
-  RemoveCart as DittoRemoveCart,
   LockCart as DittoLockCart,
+  RemoveCart as DittoRemoveCart,
   UnlockCart as DittoUnlockCart
 }
 import carts.cart.Repository
@@ -54,12 +55,12 @@ object CartServerActor {
     root: ActorRef[RootCommand],
     messageBrokerActor: ActorRef[MessageBrokerCommand],
     dittoActor: ActorRef[DittoCommand],
-    repositoryConfig: Config
+    dataSource: DataSource
   ): Behavior[CartServerCommand] =
     Behaviors.setup { ctx =>
       given ActorSystem[_] = ctx.system
       given ExecutionContext = ExecutionContext.fromExecutor(ForkJoinPool.commonPool())
-      val repository: Repository = Repository(repositoryConfig)
+      val repository: Repository = Repository(dataSource)
       root ! Startup(success = true)
       Behaviors.receiveMessage {
         case AssociateCart(cartId, store, customer, replyTo) =>

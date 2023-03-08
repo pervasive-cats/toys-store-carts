@@ -11,7 +11,6 @@ import java.util.concurrent.CompletionException
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
-
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration.DurationInt
@@ -19,7 +18,6 @@ import scala.jdk.OptionConverters.RichOptional
 import scala.util.Failure
 import scala.util.Success
 import scala.util.matching.Regex
-
 import akka.actor.testkit.typed.scaladsl.ActorTestKit
 import akka.actor.testkit.typed.scaladsl.TestProbe
 import akka.actor.typed.ActorRef
@@ -52,7 +50,6 @@ import spray.json.JsString
 import spray.json.JsValue
 import spray.json.enrichAny
 import spray.json.enrichString
-
 import application.actors.DittoCommand.*
 import application.actors.MessageBrokerCommand.ItemAddedToCart
 import application.actors.RootCommand.Startup
@@ -65,7 +62,11 @@ import carts.cart.Repository.CartNotFound
 import carts.cart.valueobjects.item.{CatalogItem, ItemId}
 import carts.cart.Repository
 import carts.cart.domainevents.{ItemInsertedIntoCart, ItemAddedToCart as ItemAddedToCartEvent}
-import carts.cart.entities.* //scalafix:ok
+import carts.cart.entities.*
+
+import io.getquill.JdbcContextConfig
+
+import javax.sql.DataSource //scalafix:ok
 
 @DoNotDiscover
 class DittoActorTest extends AnyFunSpec with BeforeAndAfterAll with SprayJsonSupport {
@@ -76,16 +77,17 @@ class DittoActorTest extends AnyFunSpec with BeforeAndAfterAll with SprayJsonSup
   private val responseProbe: TestProbe[Validated[Unit]] = testKit.createTestProbe[Validated[Unit]]()
   private val serviceProbe: TestProbe[DittoCommand] = testKit.createTestProbe[DittoCommand]()
   private val config: Config = ConfigFactory.load()
-  private val repositoryConfig: Config = config.getConfig("repository")
+  private val dataSource: DataSource = JdbcContextConfig(config.getConfig("repository")).dataSource
+
   private val dittoConfig: Config = config.getConfig("ditto")
 
-  private val repository: Repository = Repository(repositoryConfig)
+  private val repository: Repository = Repository(dataSource)
 
   @SuppressWarnings(Array("org.wartremover.warts.Var", "scalafix:DisableSyntax.var"))
   private var maybeClient: Option[DittoClient] = None
 
   private val dittoActor: ActorRef[DittoCommand] = testKit.spawn(
-    DittoActor(rootActorProbe.ref, messageBrokerActorProbe.ref, repositoryConfig, dittoConfig)
+    DittoActor(rootActorProbe.ref, messageBrokerActorProbe.ref, dataSource, dittoConfig)
   )
 
   private val cartId: CartId = CartId(1).getOrElse(fail())

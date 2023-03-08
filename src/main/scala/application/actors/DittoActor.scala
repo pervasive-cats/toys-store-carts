@@ -13,6 +13,7 @@ import java.util.concurrent.ForkJoinPool
 import java.util.function.BiConsumer
 import java.util.function.BiFunction
 import java.util.regex.Pattern
+import javax.sql.DataSource
 
 import scala.concurrent.*
 import scala.concurrent.duration.DurationInt
@@ -27,6 +28,7 @@ import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import com.typesafe.config.Config
 import eu.timepit.refined.auto.autoUnwrap
+import io.getquill.JdbcContextConfig
 import org.eclipse.ditto.base.model.common.HttpStatus
 import org.eclipse.ditto.client.DittoClient
 import org.eclipse.ditto.client.DittoClients
@@ -151,7 +153,7 @@ object DittoActor extends SprayJsonSupport {
   def apply(
     root: ActorRef[RootCommand],
     messageBrokerActor: ActorRef[MessageBrokerCommand],
-    repositoryConfig: Config,
+    dataSource: DataSource,
     dittoConfig: Config
   ): Behavior[DittoCommand] =
     Behaviors.setup[DittoCommand] { ctx =>
@@ -252,7 +254,7 @@ object DittoActor extends SprayJsonSupport {
                       }
                     )
                 )
-              onDittoMessagesIncoming(root, client, messageBrokerActor, repositoryConfig, dittoConfig)
+              onDittoMessagesIncoming(root, client, messageBrokerActor, dataSource, dittoConfig)
             case _ => Behaviors.unhandled[DittoCommand]
           }
         case _ => Behaviors.unhandled[DittoCommand]
@@ -263,14 +265,14 @@ object DittoActor extends SprayJsonSupport {
     root: ActorRef[RootCommand],
     client: DittoClient,
     messageBrokerActor: ActorRef[MessageBrokerCommand],
-    repositoryConfig: Config,
+    dataSource: DataSource,
     dittoConfig: Config
   ): Behavior[DittoCommand] = {
     root ! Startup(success = true)
     Behaviors.receive { (ctx, msg) =>
       val itemInsertionHandlers: ItemInsertionHandlers = ItemInsertionHandlers(messageBrokerActor, ctx.self)
       val cartMovementHandlers: CartMovementHandlers = CartMovementHandlers(ctx.self)
-      given Repository = Repository(repositoryConfig)
+      given Repository = Repository(dataSource)
       msg match {
         case AddCart(cartId, store, replyTo) =>
           client
