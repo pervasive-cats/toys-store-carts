@@ -8,7 +8,6 @@ package io.github.pervasivecats
 package application.actors
 
 import java.util.concurrent.ForkJoinPool
-import javax.sql.DataSource
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
@@ -33,7 +32,7 @@ object RootActor {
       )
       Behaviors.receiveMessage {
         case Startup(true) =>
-          val dataSource: DataSource = JdbcContextConfig(config.getConfig("repository")).dataSource
+          val dataSource: HikariDataSource = JdbcContextConfig(config.getConfig("repository")).dataSource
           val dittoActor: ActorRef[DittoCommand] = ctx.spawn(
             DittoActor(ctx.self, messageBrokerActor, dataSource, config.getConfig("ditto")),
             name = "ditto_actor"
@@ -44,6 +43,7 @@ object RootActor {
               awaitServers(
                 ctx.spawn(CartServerActor(ctx.self, messageBrokerActor, dittoActor, dataSource), name = "cart_server"),
                 serverConfig,
+                dataSource,
                 count = 0
               )
             case Startup(false) => Behaviors.stopped[RootCommand]
@@ -56,11 +56,12 @@ object RootActor {
   private def awaitServers(
     cartServer: ActorRef[CartServerCommand],
     serverConfig: Config,
+    dataSource: HikariDataSource,
     count: Int
   ): Behavior[RootCommand] = Behaviors.receive { (ctx, msg) =>
     msg match {
       case Startup(true) if count < 0 =>
-        awaitServers(cartServer, serverConfig, count + 1)
+        awaitServers(cartServer, serverConfig, dataSource, count + 1)
       case Startup(true) =>
         given ActorSystem[_] = ctx.system
         val httpServer: Future[Http.ServerBinding] =
@@ -71,6 +72,7 @@ object RootActor {
           case (_, PostStop) =>
             given ExecutionContext = ExecutionContext.fromExecutor(ForkJoinPool.commonPool())
             httpServer.flatMap(_.unbind()).onComplete(_ => println("Server has stopped"))
+            dataSource.close()
             Behaviors.same[RootCommand]
         }
       case Startup(false) => Behaviors.stopped[RootCommand]
