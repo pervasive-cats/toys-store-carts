@@ -141,6 +141,7 @@ object Serializers extends DefaultJsonProtocol {
     }
 
     override def write(itemAddedToCart: ItemAddedToCart): JsValue = JsObject(
+      "type" -> "ItemAddedToCart".toJson,
       "id" -> itemAddedToCart.itemId.toJson,
       "kind" -> itemAddedToCart.catalogItem.toJson,
       "store" -> itemAddedToCart.store.toJson,
@@ -164,6 +165,7 @@ object Serializers extends DefaultJsonProtocol {
     }
 
     override def write(itemInsertedIntoCart: ItemInsertedIntoCart): JsValue = JsObject(
+      "type" -> "ItemInsertedIntoCart".toJson,
       "id" -> itemInsertedIntoCart.itemId.toJson,
       "kind" -> itemInsertedIntoCart.catalogItem.toJson,
       "store" -> itemInsertedIntoCart.store.toJson,
@@ -184,6 +186,7 @@ object Serializers extends DefaultJsonProtocol {
     }
 
     override def write(cartAssociated: CartAssociated): JsValue = JsObject(
+      "type" -> "CartAssociated".toJson,
       "id" -> cartAssociated.cartId.toJson,
       "store" -> cartAssociated.store.toJson,
       "customer" -> cartAssociated.customer.toJson
