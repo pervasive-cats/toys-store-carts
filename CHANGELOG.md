@@ -1,3 +1,13 @@
+## [1.0.2](https://github.com/pervasive-cats/toys-store-carts/compare/v1.0.1...v1.0.2) (2023-03-10)
+
+
+### Bug Fixes
+
+* add database connection pool close on system shutdown ([ff060e2](https://github.com/pervasive-cats/toys-store-carts/commit/ff060e23e9fa7b9ac747c35c8aec6f86ddd7fde0))
+* add missing field type while serializing domain events ([ae47150](https://github.com/pervasive-cats/toys-store-carts/commit/ae47150732c87a16f530dd97e2711d9b0ce60949))
+* remove code instrumentation when generating jar file ([57a2c2c](https://github.com/pervasive-cats/toys-store-carts/commit/57a2c2c7f8f5c85a2bf7955ae5e4e67758980d57))
+* share datasource between all repository instances ([f9ed5ef](https://github.com/pervasive-cats/toys-store-carts/commit/f9ed5ef91d1a71395b4b8706c2489fd4a4b18a0f))
+
 ## [1.0.1](https://github.com/pervasive-cats/toys-store-carts/compare/v1.0.0...v1.0.1) (2023-03-02)
 
 
