@@ -32,5 +32,5 @@ object Dependencies {
 
   lazy val akkaHttpTestkit: ModuleID = "com.typesafe.akka" %% "akka-http-testkit" % "10.5.0" % Test
   
-  lazy val ditto: ModuleID = "org.eclipse.ditto" % "ditto-client" % "3.1.1"
+  lazy val ditto: ModuleID = "org.eclipse.ditto" % "ditto-client" % "3.2.0"
 }
