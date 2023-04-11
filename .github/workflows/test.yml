@@ -46,7 +46,7 @@ jobs:
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          directory: target/scala-3.2.2-RC2/scoverage-report
+          directory: target/scala-3.2.2/scoverage-report
           fail_ci_if_error: true
           flags: unittests
           name: codecov-umbrella
@@ -55,5 +55,5 @@ jobs:
         uses: actions/upload-artifact@v3.1.2
         with:
           name: coverage
-          path: target/scala-3.2.2-RC2/scoverage-report/scoverage.xml
+          path: target/scala-3.2.2/scoverage-report/scoverage.xml
           if-no-files-found: error
