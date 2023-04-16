@@ -16,6 +16,19 @@ import scala.concurrent.duration.DurationInt
 import scala.util.Failure
 import scala.util.Success
 
+import io.github.pervasivecats.application.actors.commands.CartServerCommand
+import io.github.pervasivecats.application.actors.commands.CartServerCommand.*
+import io.github.pervasivecats.application.actors.commands.DittoCommand
+import io.github.pervasivecats.application.actors.commands.DittoCommand.{AddCart => DittoAddCart}
+import io.github.pervasivecats.application.actors.commands.DittoCommand.{AssociateCart => DittoAssociateCart}
+import io.github.pervasivecats.application.actors.commands.DittoCommand.{LockCart => DittoLockCart}
+import io.github.pervasivecats.application.actors.commands.DittoCommand.{RemoveCart => DittoRemoveCart}
+import io.github.pervasivecats.application.actors.commands.DittoCommand.{UnlockCart => DittoUnlockCart}
+import io.github.pervasivecats.application.actors.commands.MessageBrokerCommand
+import io.github.pervasivecats.application.actors.commands.MessageBrokerCommand.CartAssociated
+import io.github.pervasivecats.application.actors.commands.RootCommand
+import io.github.pervasivecats.application.actors.commands.RootCommand.Startup
+
 import akka.actor.typed.ActorRef
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.Behavior
@@ -25,18 +38,8 @@ import akka.actor.typed.scaladsl.Behaviors
 import akka.util.Timeout
 import com.typesafe.config.Config
 
-import application.actors.CartServerCommand.*
-import application.actors.RootCommand.Startup
 import application.routes.entities.Response.*
 import application.RequestProcessingFailed
-import application.actors.MessageBrokerCommand.CartAssociated
-import application.actors.DittoCommand.{
-  AddCart as DittoAddCart,
-  AssociateCart as DittoAssociateCart,
-  LockCart as DittoLockCart,
-  RemoveCart as DittoRemoveCart,
-  UnlockCart as DittoUnlockCart
-}
 import carts.cart.Repository
 import carts.cart.entities.*
 import carts.cart.entities.LockedCartOps.unlock

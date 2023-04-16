@@ -5,7 +5,7 @@
  */
 
 package io.github.pervasivecats
-package application.actors
+package application.actors.commands
 
 sealed trait RootCommand
 

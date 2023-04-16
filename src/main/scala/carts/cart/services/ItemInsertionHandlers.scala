@@ -7,11 +7,13 @@
 package io.github.pervasivecats
 package carts.cart.services
 
+import io.github.pervasivecats.application.actors.commands.DittoCommand
+import io.github.pervasivecats.application.actors.commands.DittoCommand.RaiseCartAlarm
+import io.github.pervasivecats.application.actors.commands.MessageBrokerCommand
+import io.github.pervasivecats.application.actors.commands.MessageBrokerCommand.ItemAddedToCart
+
 import akka.actor.typed.ActorRef
 
-import application.actors.{DittoCommand, MessageBrokerCommand}
-import application.actors.DittoCommand.RaiseCartAlarm
-import application.actors.MessageBrokerCommand.ItemAddedToCart
 import carts.cart.domainevents.{ItemInsertedIntoCart, ItemAddedToCart as ItemAddedToCartEvent}
 import carts.cart.Repository
 import carts.cart.entities.*

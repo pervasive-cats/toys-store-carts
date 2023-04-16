@@ -50,9 +50,9 @@ import spray.json.JsString
 import spray.json.JsValue
 import spray.json.enrichAny
 import spray.json.enrichString
-import application.actors.DittoCommand.*
-import application.actors.MessageBrokerCommand.ItemAddedToCart
-import application.actors.RootCommand.Startup
+import io.github.pervasivecats.application.actors.commands.DittoCommand.*
+import io.github.pervasivecats.application.actors.commands.MessageBrokerCommand.ItemAddedToCart
+import io.github.pervasivecats.application.actors.commands.RootCommand.Startup
 import application.routes.entities.Response.*
 import application.Serializers.given
 import application.actors.DittoActor.DittoError
@@ -65,6 +65,7 @@ import carts.cart.domainevents.{ItemInsertedIntoCart, ItemAddedToCart as ItemAdd
 import carts.cart.entities.*
 
 import io.getquill.JdbcContextConfig
+import io.github.pervasivecats.application.actors.commands.{DittoCommand, MessageBrokerCommand, RootCommand}
 
 import javax.sql.DataSource //scalafix:ok
 

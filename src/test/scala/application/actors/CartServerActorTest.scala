@@ -11,6 +11,18 @@ import scala.concurrent.duration.DurationInt
 import scala.concurrent.duration.FiniteDuration
 
 import io.github.pervasivecats.Validated
+import io.github.pervasivecats.application.actors.commands.CartServerCommand
+import io.github.pervasivecats.application.actors.commands.CartServerCommand.*
+import io.github.pervasivecats.application.actors.commands.DittoCommand
+import io.github.pervasivecats.application.actors.commands.DittoCommand.{AddCart => DittoAddCart}
+import io.github.pervasivecats.application.actors.commands.DittoCommand.{AssociateCart => DittoAssociateCart}
+import io.github.pervasivecats.application.actors.commands.DittoCommand.{LockCart => DittoLockCart}
+import io.github.pervasivecats.application.actors.commands.DittoCommand.{RemoveCart => DittoRemoveCart}
+import io.github.pervasivecats.application.actors.commands.DittoCommand.{UnlockCart => DittoUnlockCart}
+import io.github.pervasivecats.application.actors.commands.MessageBrokerCommand
+import io.github.pervasivecats.application.actors.commands.MessageBrokerCommand.CartAssociated
+import io.github.pervasivecats.application.actors.commands.RootCommand
+import io.github.pervasivecats.application.actors.commands.RootCommand.Startup
 
 import akka.actor.testkit.typed.scaladsl.ActorTestKit
 import akka.actor.testkit.typed.scaladsl.TestProbe
@@ -28,16 +40,6 @@ import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers.*
 import org.testcontainers.utility.DockerImageName
 
-import application.actors.MessageBrokerCommand.CartAssociated
-import application.actors.DittoCommand.{
-  AddCart as DittoAddCart,
-  AssociateCart as DittoAssociateCart,
-  LockCart as DittoLockCart,
-  RemoveCart as DittoRemoveCart,
-  UnlockCart as DittoUnlockCart
-}
-import application.actors.CartServerCommand.*
-import application.actors.RootCommand.Startup
 import application.routes.entities.CartEntity.StoreCartsShowEntity
 import application.routes.entities.Response.*
 import carts.cart.entities.*

@@ -9,6 +9,7 @@ package application.actors
 
 import java.net.http.HttpHeaders
 import java.util.concurrent.CompletionException
+import java.util.concurrent.Executors
 import java.util.concurrent.ForkJoinPool
 import java.util.function.BiConsumer
 import java.util.function.BiFunction
@@ -21,6 +22,12 @@ import scala.jdk.OptionConverters.RichOptional
 import scala.util.Failure
 import scala.util.Success
 import scala.util.matching.Regex
+
+import io.github.pervasivecats.application.actors.commands.DittoCommand
+import io.github.pervasivecats.application.actors.commands.DittoCommand.*
+import io.github.pervasivecats.application.actors.commands.MessageBrokerCommand
+import io.github.pervasivecats.application.actors.commands.RootCommand
+import io.github.pervasivecats.application.actors.commands.RootCommand.Startup
 
 import akka.actor.typed.ActorRef
 import akka.actor.typed.Behavior
@@ -51,8 +58,6 @@ import spray.json.JsValue
 import spray.json.enrichAny
 import spray.json.enrichString
 
-import application.actors.DittoCommand.*
-import application.actors.RootCommand.Startup
 import application.Serializers.given
 import carts.cart.domainevents.{CartMoved as CartMovedEvent, ItemInsertedIntoCart as ItemInsertedIntoCartEvent}
 import carts.cart.services.{CartMovementHandlers, ItemInsertionHandlers}
@@ -273,6 +278,7 @@ object DittoActor extends SprayJsonSupport {
       val itemInsertionHandlers: ItemInsertionHandlers = ItemInsertionHandlers(messageBrokerActor, ctx.self)
       val cartMovementHandlers: CartMovementHandlers = CartMovementHandlers(ctx.self)
       given Repository = Repository(dataSource)
+      given ExecutionContext = ExecutionContext.fromExecutor(Executors.newSingleThreadExecutor())
       msg match {
         case AddCart(cartId, store, replyTo) =>
           client
@@ -349,10 +355,10 @@ object DittoActor extends SprayJsonSupport {
           )
           Behaviors.same[DittoCommand]
         case ItemInsertedIntoCart(cartId, store, catalogItem, itemId) =>
-          itemInsertionHandlers.onItemInsertedIntoCart(ItemInsertedIntoCartEvent(cartId, store, catalogItem, itemId))
+          Future(itemInsertionHandlers.onItemInsertedIntoCart(ItemInsertedIntoCartEvent(cartId, store, catalogItem, itemId)))
           Behaviors.same[DittoCommand]
         case CartMoved(cartId, store) =>
-          cartMovementHandlers.onCartMoved(CartMovedEvent(cartId, store))
+          Future(cartMovementHandlers.onCartMoved(CartMovedEvent(cartId, store)))
           Behaviors.same[DittoCommand]
         case _ => Behaviors.unhandled[DittoCommand]
       }

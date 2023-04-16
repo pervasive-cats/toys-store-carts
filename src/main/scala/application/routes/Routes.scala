@@ -11,6 +11,9 @@ import scala.concurrent.duration.DurationInt
 import scala.util.Failure
 import scala.util.Success
 
+import io.github.pervasivecats.application.actors.commands.CartServerCommand
+import io.github.pervasivecats.application.actors.commands.CartServerCommand.*
+
 import akka.actor.typed.ActorRef
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.AskPattern.Askable
@@ -23,8 +26,6 @@ import akka.util.Timeout
 import spray.json.JsonWriter
 
 import application.actors.CartServerActor.OperationRejected
-import application.actors.CartServerCommand
-import application.actors.CartServerCommand.*
 import application.routes.entities.CartEntity.*
 import application.routes.entities.Entity.{ErrorResponseEntity, ResultResponseEntity, given}
 import application.routes.entities.Response

@@ -5,11 +5,11 @@
  */
 
 package io.github.pervasivecats
-package application.actors
+package application.actors.commands
 
 import akka.actor.typed.ActorRef
 
-import carts.cart.domainevents.{ItemAddedToCart as ItemAddedToCartEvent, CartAssociated as CartAssociatedEvent}
+import carts.cart.domainevents.{CartAssociated as CartAssociatedEvent, ItemAddedToCart as ItemAddedToCartEvent}
 
 sealed trait MessageBrokerCommand
 

@@ -13,6 +13,11 @@ import java.util.UUID
 import scala.jdk.CollectionConverters.MapHasAsJava
 import scala.util.Try
 
+import io.github.pervasivecats.application.actors.commands.MessageBrokerCommand
+import io.github.pervasivecats.application.actors.commands.MessageBrokerCommand.*
+import io.github.pervasivecats.application.actors.commands.RootCommand
+import io.github.pervasivecats.application.actors.commands.RootCommand.Startup
+
 import akka.actor.typed.*
 import akka.actor.typed.scaladsl.ActorContext
 import akka.actor.typed.scaladsl.Behaviors
@@ -24,7 +29,6 @@ import spray.json.JsonFormat
 import spray.json.enrichAny
 import spray.json.enrichString
 
-import application.actors.MessageBrokerCommand.*
 import application.routes.entities.Entity
 import carts.cart.domainevents.{
   CartAssociated as CartAssociatedEvent,
@@ -33,7 +37,6 @@ import carts.cart.domainevents.{
   ItemInsertedIntoCart as ItemInsertedIntoCartEvent
 }
 import AnyOps.===
-import application.actors.RootCommand.Startup
 import application.routes.entities.Entity.{ResultResponseEntity, given}
 import application.Serializers.given
 import carts.cart.Repository

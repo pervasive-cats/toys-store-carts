@@ -9,6 +9,9 @@ package application.routes
 
 import scala.concurrent.duration.DurationInt
 
+import io.github.pervasivecats.application.actors.commands.CartServerCommand
+import io.github.pervasivecats.application.actors.commands.CartServerCommand.*
+
 import akka.actor.testkit.typed.scaladsl.TestProbe
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.adapter.*
@@ -23,8 +26,6 @@ import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers.*
 import spray.json.enrichAny
 
-import application.actors.CartServerCommand
-import application.actors.CartServerCommand.*
 import application.routes.entities.CartEntity.*
 import application.routes.entities.Entity.*
 import application.routes.entities.Entity.given

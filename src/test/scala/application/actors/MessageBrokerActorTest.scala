@@ -15,6 +15,12 @@ import scala.concurrent.duration.DurationInt
 import scala.concurrent.duration.FiniteDuration
 import scala.jdk.CollectionConverters.MapHasAsJava
 
+import io.github.pervasivecats.application.actors.commands.MessageBrokerCommand
+import io.github.pervasivecats.application.actors.commands.MessageBrokerCommand.CartAssociated
+import io.github.pervasivecats.application.actors.commands.MessageBrokerCommand.ItemAddedToCart
+import io.github.pervasivecats.application.actors.commands.RootCommand
+import io.github.pervasivecats.application.actors.commands.RootCommand.Startup
+
 import akka.actor.testkit.typed.scaladsl.ActorTestKit
 import akka.actor.testkit.typed.scaladsl.TestProbe
 import akka.actor.typed.ActorRef
@@ -30,8 +36,6 @@ import org.scalatest.matchers.should.Matchers.*
 import org.testcontainers.containers.wait.strategy.LogMessageWaitStrategy
 import spray.json.enrichString
 
-import application.actors.MessageBrokerCommand.{CartAssociated, ItemAddedToCart}
-import application.actors.RootCommand.Startup
 import application.routes.entities.Response.EmptyResponse
 import application.Serializers.given
 import application.routes.entities.Entity.ResultResponseEntity

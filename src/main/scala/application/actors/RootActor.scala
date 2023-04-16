@@ -12,6 +12,12 @@ import java.util.concurrent.ForkJoinPool
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
+import io.github.pervasivecats.application.actors.commands.CartServerCommand
+import io.github.pervasivecats.application.actors.commands.DittoCommand
+import io.github.pervasivecats.application.actors.commands.MessageBrokerCommand
+import io.github.pervasivecats.application.actors.commands.RootCommand
+import io.github.pervasivecats.application.actors.commands.RootCommand.Startup
+
 import akka.actor.typed.*
 import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.Http
@@ -19,7 +25,6 @@ import com.typesafe.config.Config
 import com.zaxxer.hikari.HikariDataSource
 import io.getquill.JdbcContextConfig
 
-import application.actors.RootCommand.Startup
 import application.routes.Routes
 
 object RootActor {

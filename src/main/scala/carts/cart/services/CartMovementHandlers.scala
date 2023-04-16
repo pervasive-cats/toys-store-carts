@@ -7,10 +7,11 @@
 package io.github.pervasivecats
 package carts.cart.services
 
+import io.github.pervasivecats.application.actors.commands.DittoCommand
+import io.github.pervasivecats.application.actors.commands.DittoCommand.RaiseCartAlarm
+
 import akka.actor.typed.ActorRef
 
-import application.actors.DittoCommand
-import application.actors.DittoCommand.RaiseCartAlarm
 import carts.cart.domainevents.CartMoved
 import carts.cart.Repository
 import carts.cart.entities.*

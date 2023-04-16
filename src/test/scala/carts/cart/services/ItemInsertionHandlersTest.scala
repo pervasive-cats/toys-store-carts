@@ -10,6 +10,11 @@ package carts.cart.services
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.duration.FiniteDuration
 
+import io.github.pervasivecats.application.actors.commands.DittoCommand
+import io.github.pervasivecats.application.actors.commands.DittoCommand.RaiseCartAlarm
+import io.github.pervasivecats.application.actors.commands.MessageBrokerCommand
+import io.github.pervasivecats.application.actors.commands.MessageBrokerCommand.ItemAddedToCart
+
 import akka.actor.testkit.typed.scaladsl.ActorTestKit
 import akka.actor.testkit.typed.scaladsl.TestProbe
 import com.dimafeng.testcontainers.JdbcDatabaseContainer.CommonParams
@@ -23,9 +28,6 @@ import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers.*
 import org.testcontainers.utility.DockerImageName
 
-import application.actors.{DittoCommand, MessageBrokerCommand}
-import application.actors.DittoCommand.RaiseCartAlarm
-import application.actors.MessageBrokerCommand.ItemAddedToCart
 import carts.cart.{entities, Repository}
 import carts.cart.domainevents.{CartMoved, ItemInsertedIntoCart, ItemAddedToCart as ItemAddedToCartEvent}
 import carts.cart.entities.*
