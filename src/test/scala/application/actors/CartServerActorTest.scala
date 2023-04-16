@@ -47,7 +47,7 @@ import carts.cart.valueobjects.*
 import carts.cart.Repository.CartNotFound
 import carts.RepositoryOperationFailed
 import carts.cart.Repository
-import carts.cart.domainevents.CartAssociated as CartAssociatedEvent
+import carts.cart.domainevents.CartAssociated as CartAssociatedEvent //scalafix:ok
 
 class CartServerActorTest extends AnyFunSpec with TestContainerForAll with BeforeAndAfterAll {
 

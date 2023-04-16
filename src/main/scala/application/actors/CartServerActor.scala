@@ -7,43 +7,29 @@
 package io.github.pervasivecats
 package application.actors
 
-import java.util.concurrent.ForkJoinPool
-import javax.sql.DataSource
+import application.RequestProcessingFailed
+import application.actors.commands.CartServerCommand.*
+import application.actors.commands.DittoCommand.{AddCart as DittoAddCart, AssociateCart as DittoAssociateCart, LockCart as DittoLockCart, RemoveCart as DittoRemoveCart, UnlockCart as DittoUnlockCart}
+import application.actors.commands.MessageBrokerCommand.CartAssociated
+import application.actors.commands.{CartServerCommand, DittoCommand, MessageBrokerCommand, RootCommand}
+import application.actors.commands.RootCommand.Startup
+import application.routes.entities.Response.*
+import carts.cart.Repository
+import carts.cart.domainevents.CartAssociated as CartAssociatedEvent
+import carts.cart.entities.*
+import carts.cart.entities.LockedCartOps.unlock
 
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
-import scala.concurrent.duration.DurationInt
-import scala.util.Failure
-import scala.util.Success
-
-import io.github.pervasivecats.application.actors.commands.CartServerCommand
-import io.github.pervasivecats.application.actors.commands.CartServerCommand.*
-import io.github.pervasivecats.application.actors.commands.DittoCommand
-import io.github.pervasivecats.application.actors.commands.DittoCommand.{AddCart => DittoAddCart}
-import io.github.pervasivecats.application.actors.commands.DittoCommand.{AssociateCart => DittoAssociateCart}
-import io.github.pervasivecats.application.actors.commands.DittoCommand.{LockCart => DittoLockCart}
-import io.github.pervasivecats.application.actors.commands.DittoCommand.{RemoveCart => DittoRemoveCart}
-import io.github.pervasivecats.application.actors.commands.DittoCommand.{UnlockCart => DittoUnlockCart}
-import io.github.pervasivecats.application.actors.commands.MessageBrokerCommand
-import io.github.pervasivecats.application.actors.commands.MessageBrokerCommand.CartAssociated
-import io.github.pervasivecats.application.actors.commands.RootCommand
-import io.github.pervasivecats.application.actors.commands.RootCommand.Startup
-
-import akka.actor.typed.ActorRef
-import akka.actor.typed.ActorSystem
-import akka.actor.typed.Behavior
-import akka.actor.typed.scaladsl.AskPattern.Askable
-import akka.actor.typed.scaladsl.AskPattern.schedulerFromActorSystem
+import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
+import akka.actor.typed.scaladsl.AskPattern.{Askable, schedulerFromActorSystem}
 import akka.actor.typed.scaladsl.Behaviors
 import akka.util.Timeout
 import com.typesafe.config.Config
 
-import application.routes.entities.Response.*
-import application.RequestProcessingFailed
-import carts.cart.Repository
-import carts.cart.entities.*
-import carts.cart.entities.LockedCartOps.unlock
-import carts.cart.domainevents.CartAssociated as CartAssociatedEvent
+import java.util.concurrent.ForkJoinPool
+import javax.sql.DataSource
+import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration.DurationInt
+import scala.util.{Failure, Success} //scalafix:ok
 
 object CartServerActor {
 
