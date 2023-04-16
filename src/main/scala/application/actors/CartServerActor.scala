@@ -9,7 +9,13 @@ package application.actors
 
 import application.RequestProcessingFailed
 import application.actors.commands.CartServerCommand.*
-import application.actors.commands.DittoCommand.{AddCart as DittoAddCart, AssociateCart as DittoAssociateCart, LockCart as DittoLockCart, RemoveCart as DittoRemoveCart, UnlockCart as DittoUnlockCart}
+import application.actors.commands.DittoCommand.{
+  AddCart as DittoAddCart,
+  AssociateCart as DittoAssociateCart,
+  LockCart as DittoLockCart,
+  RemoveCart as DittoRemoveCart,
+  UnlockCart as DittoUnlockCart
+}
 import application.actors.commands.MessageBrokerCommand.CartAssociated
 import application.actors.commands.{CartServerCommand, DittoCommand, MessageBrokerCommand, RootCommand}
 import application.actors.commands.RootCommand.Startup
