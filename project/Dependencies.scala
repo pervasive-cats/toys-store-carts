@@ -12,7 +12,7 @@ object Dependencies {
 
   lazy val quill: ModuleID = "io.getquill" %% "quill-jdbc" % "4.6.0.1"
 
-  lazy val testContainers: ModuleID = "com.dimafeng" %% "testcontainers-scala-scalatest" % "0.40.14" % Test
+  lazy val testContainers: ModuleID = "com.dimafeng" %% "testcontainers-scala-scalatest" % "0.40.15" % Test
 
   lazy val testContainersPostgresql: ModuleID = "com.dimafeng" %% "testcontainers-scala-postgresql" % "0.40.15" % Test
 
