@@ -16,7 +16,7 @@ object Dependencies {
 
   lazy val testContainersPostgresql: ModuleID = "com.dimafeng" %% "testcontainers-scala-postgresql" % "0.40.15" % Test
 
-  lazy val akka: ModuleID = "com.typesafe.akka" %% "akka-actor-typed" % "2.8.0"
+  lazy val akka: ModuleID = "com.typesafe.akka" %% "akka-actor-typed" % "2.8.5"
 
   lazy val akkaStream: ModuleID = "com.typesafe.akka" %% "akka-stream" % "2.8.0"
 
