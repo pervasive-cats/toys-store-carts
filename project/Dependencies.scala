@@ -24,7 +24,7 @@ object Dependencies {
 
   lazy val akkaHttpSprayJson: ModuleID = "com.typesafe.akka" %% "akka-http-spray-json" % "10.5.1"
 
-  lazy val akkaTestKit: ModuleID = "com.typesafe.akka" %% "akka-actor-testkit-typed" % "2.8.0" % Test
+  lazy val akkaTestKit: ModuleID = "com.typesafe.akka" %% "akka-actor-testkit-typed" % "2.8.5" % Test
 
   lazy val rabbitMQ: ModuleID = "com.rabbitmq" % "amqp-client" % "5.17.0"
 
